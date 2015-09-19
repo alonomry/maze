@@ -4,16 +4,16 @@ import controller.Controller;
 
 public interface Model {
 	public void setController(Controller controller);
-	public void dirCommand(String param);
-	public void generateCommand();
-	public void displayCommand();
-	public void displayCrossSectionCommand();
-	public void saveCommand();
-	public void loadCommand();
-	public void mazeSizeCommand();
-	public void fileSizeCommand();
-	public void SolveCommand();
-	public void dislplaySolutionCommand();
+	public void dirCommand(String[] param);
+	public void generateCommand(String[] param);
+	public void displayCommand(String[] param);
+	public void displayCrossSectionCommand(String[] param);
+	public void saveCommand(String[] param);
+	public void loadCommand(String[] param);
+	public void mazeSizeCommand(String[] param);
+	public void fileSizeCommand(String[] param);
+	public void SolveCommand(String[] param);
+	public void dislplaySolutionCommand(String[] param);
 	public void exitCommand();
 	
 }

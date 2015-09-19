@@ -26,9 +26,8 @@ public class MyView implements View {
 	}
 
 	@Override
-	public void display(Object obj) {
-		// TODO Auto-generated method stub
-		
+	public void display (Object obj,DisplayType d) {
+		d.display(obj);		
 	}
 
 	@Override

@@ -2,7 +2,7 @@ package controller;
 
 import java.util.HashMap;
 import model.Model;
-import view.View;
+import view.*;
 
 public class MyController implements Controller{
 
@@ -57,7 +57,25 @@ public class MyController implements Controller{
 		
 	}
 	public void update(Object obj) {
-		view.display(obj);
+		String temp=obj.getClass().getCanonicalName();
+		switch (temp) {
+		case "java.lang.String":
+			view.display(obj,new StringDisplay());
+			break;
+		case "java.lang.String[]":
+			view.display(obj,new StringArrayDisplay());
+			break;
+		case "java.util.ArrayList":
+			view.display(obj,new ArrayListDisplay());
+			break;
+		case "int[][]":
+			view.display(obj,new CrossDisplay());			
+			break;
+
+		default:
+			break;
+		}
+		
 		
 	}
 	
@@ -72,8 +90,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
-			
+			model.dirCommand(param);			
 		}
 		
 	}
@@ -82,7 +99,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
+			model.generateCommand(param);
 			
 		}
 		
@@ -92,7 +109,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
+			model.displayCommand(param);
 			
 		}
 		
@@ -102,8 +119,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
-			
+			model.displayCrossSectionCommand(param);			
 		}
 		
 	}
@@ -112,8 +128,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
-			
+			model.saveCommand(param);
 		}
 		
 	}
@@ -122,8 +137,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
-			
+			model.loadCommand(param);
 		}
 		
 	}
