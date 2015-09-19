@@ -8,11 +8,11 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
-
+import java.util.concurrent.ThreadPoolExecutor;
 
 import controller.Command;
 
-public class CLI {
+public class CLI implements View{
 
 	BufferedReader in = null;
 	PrintWriter out = null;
@@ -29,9 +29,9 @@ public class CLI {
 			public void run() {
 				  String line;
 				  try {
-					while(!(line = in.readLine()).endsWith("exit")){
+					while(!(line = in.readLine()).equals("exit")){
 							String[] stringCommand = line.split(" ");
-							if(hashCommand.containsKey(stringCommand[0]))
+							if(hashCommand.containsKey(stringCommand[0])){
 								switch (stringCommand[0]) {
 								case "dir":
 									hashCommand.get(stringCommand[0]).doCommand(stringCommand);
@@ -73,15 +73,24 @@ public class CLI {
 								default:
 									break;
 								}
-								
+							}
 							else
-								out.write("Wrong Command");		
+								System.out.println("Wrong Command");
+									
 					}
+					hashCommand.get("exit").doCommand(null);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		});
 		t.start();
-		}
 	}
+
+
+	@Override
+	public void display(Object obj) {
+		// TODO Auto-generated method stub
+		
+	}
+}
