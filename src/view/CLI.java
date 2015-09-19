@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Scanner;
+
 import controller.Command;
 
 public class CLI {
@@ -27,9 +29,10 @@ public class CLI {
 			public void run() {
 				  String line;
 				  try {
-					while(!(line = in.readLine()).equals("exit")){
-							if(hashCommand.containsKey(line))
-								hashCommand.get(line).doCommand();
+					while(!(line = in.readLine()).endsWith("exit")){
+							String[] stringCommand = line.split(" ");
+							if(hashCommand.containsKey(stringCommand[0]))
+								hashCommand.get(stringCommand[0]).doCommand(stringCommand);
 							else
 								out.write("Wrong Command");		
 					}
