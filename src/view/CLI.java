@@ -8,7 +8,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.Scanner;
+
 
 import controller.Command;
 
@@ -32,7 +32,48 @@ public class CLI {
 					while(!(line = in.readLine()).endsWith("exit")){
 							String[] stringCommand = line.split(" ");
 							if(hashCommand.containsKey(stringCommand[0]))
-								hashCommand.get(stringCommand[0]).doCommand(stringCommand);
+								switch (stringCommand[0]) {
+								case "dir":
+									hashCommand.get(stringCommand[0]).doCommand(stringCommand);
+									break;
+								case "generate":
+									hashCommand.get(stringCommand[0]+" "+stringCommand[1]+" "+stringCommand[2]).doCommand(stringCommand);
+									break;
+								case "display":
+									if (stringCommand[1].equals("cross")){
+										hashCommand.get(stringCommand[0]+" "+stringCommand[1]+" "+stringCommand[2]+" "+stringCommand[3]).doCommand(stringCommand);
+										break;
+									}
+									else {
+										if (stringCommand[1].equals("solution")){
+											hashCommand.get(stringCommand[0]+" "+stringCommand[1]).doCommand(stringCommand);
+											break;
+										}
+										else {
+											hashCommand.get(stringCommand[0]).doCommand(stringCommand);
+											break;
+										}
+											
+									}
+								case "save":
+									hashCommand.get(stringCommand[0]+" "+stringCommand[1]).doCommand(stringCommand);
+									break;
+								case "load":
+									hashCommand.get(stringCommand[0]+" "+stringCommand[1]).doCommand(stringCommand);
+									break;
+								case "maze":
+									hashCommand.get(stringCommand[0]+" "+stringCommand[1]).doCommand(stringCommand);
+									break;
+								case "file":
+									hashCommand.get(stringCommand[0]+" "+stringCommand[1]).doCommand(stringCommand);
+									break;
+								case "solve":
+									hashCommand.get(stringCommand[0]).doCommand(stringCommand);
+									break;
+								default:
+									break;
+								}
+								
 							else
 								out.write("Wrong Command");		
 					}
