@@ -71,6 +71,16 @@ public class MyController implements Controller{
 		case "int[][]":
 			view.display(obj,new CrossDisplay());			
 			break;
+		case "java.lang.Long":
+			view.display(obj,new LongDisplay());			
+			break;
+		case "algorithms.search.Solution":
+			view.display(obj,new SolDisplay());			
+			break;
+			
+			
+			
+			
 
 		default:
 			break;
@@ -146,7 +156,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
+			model.mazeSizeCommand(param);
 			
 		}
 		
@@ -156,8 +166,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
-			
+			model.fileSizeCommand(param);
 		}
 		
 	}
@@ -166,7 +175,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
+			model.SolveCommand(param);
 			
 		}
 		
@@ -176,7 +185,7 @@ public class MyController implements Controller{
 
 		@Override
 		public void doCommand(String[] param) {
-			// TODO Auto-generated method stub
+			model.dislplaySolutionCommand(param);
 			
 		}
 		

@@ -15,13 +15,21 @@ import algorithms.io.MyDecompressorInputStream;
 import algorithms.mazeGenerators.Maze3d;
 import algorithms.mazeGenerators.Maze3dGenerator;
 import algorithms.mazeGenerators.MyMaze3dGenerator;
-import controller.Command;
+import algorithms.mazeGenerators.Position;
+import algorithms.search.AirDistance;
+import algorithms.search.Astar;
+import algorithms.search.Bfs;
+import algorithms.search.ManhattanDistance;
+import algorithms.search.Searcher;
+import algorithms.search.Solution;
 import controller.Controller;
+import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
 
 public class MyModel implements Model{
 
 	Controller controller;
 	HashMap<String, ArrayList<Maze3d>> AllMazes= new HashMap<>();
+	HashMap<String, ArrayList<Solution<Position>>> Allsolutions= new HashMap<>();
 	
 	public void setController(Controller controller) {
 		this.controller = controller;
@@ -34,11 +42,11 @@ public class MyModel implements Model{
 				File f = new File(param[1]);
 					if(f.exists())
 						controller.update(f.list());	
-					else 
-						throw new IOException("Not a Valid Path");
+					else throw new IOException("Not a Valid Path");
 			}
+			else throw new IOException("Not a Valid command");
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			controller.update(e.getMessage());
 		}			
 	}
 
@@ -61,12 +69,10 @@ public class MyModel implements Model{
 						//Thread.sleep(10000);	//for checks only
 					controller.update("maze "+param[3]+" is ready");
 			}
-					else 
-						throw new IOException("Not a Valid Command");
+					else throw new IOException("Not a Valid Command");
 			
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
+			controller.update(e.getMessage());		}
 		
 	}
 		}).start();
@@ -81,11 +87,12 @@ public class MyModel implements Model{
 				ArrayList<Maze3d> arraylist = AllMazes.get(param[1]);
 				controller.update(arraylist);
 				}
-				else
-					throw new IOException("Not a Valid Maze Name");
+				else throw new IOException("Not a Valid Maze Name");
 			}
+			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
-			System.out.println(e.getMessage());		}
+			controller.update(e.getMessage());
+			}
 	}
 
 	@Override
@@ -108,9 +115,11 @@ public class MyModel implements Model{
 //					controller.update(maze2dy);
 //				}
 				}
+				else throw new IOException("Wrong Axis");
 			}
+			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			controller.update(e.getMessage());
 			}
 		
 	}
@@ -128,14 +137,16 @@ public class MyModel implements Model{
 				{
 				OutputStream co=new MyCompressorOutputStream(new FileOutputStream(param[3])); //calling compressor
 				co.write(arraylist.get(arraylist.size()-1).toByteArray());//save the last maze that created
-				co.flush();
+				co.close();
 				controller.update("Maze "+param[2]+" Saved to "+param[3]);
 				}
 				}
 				else throw new IOException("Not a Valid path");
 			}
+			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
-			System.out.println(e.getMessage());		}		
+			controller.update(e.getMessage());
+			}		
 	}
 
 	@Override
@@ -165,41 +176,137 @@ public class MyModel implements Model{
 						}
 						arraylist.add(fromfile);//add the maze to arraylist
 						AllMazes.put(param[3], arraylist);
-						controller.update("Load compleate");	
+						controller.update("Load completed");
 						}
+					else throw new IOException("Not a Valid Path");
 				}
+				else throw new IOException("Not a Valid Command");
 			} catch (Exception e) {
-				// TODO: handle exception
+				controller.update(e.getMessage());
 			}
 	}
 
 	@Override
 	public void mazeSizeCommand(String[] param) {
-		// TODO Auto-generated method stub
+		try {
+			if(param.length==3){
+				if(AllMazes.get(param[2])!=null)//get the array list for specific name
+				{
+				ArrayList<Maze3d> arraylist = new ArrayList<Maze3d>();
+				arraylist=AllMazes.get(param[2]);
+				controller.update(ObjectSizeCalculator.getObjectSize(arraylist));
+				}
+				
+				else throw new IOException("maze not found");	
+			}
+			else throw new IOException("Not a Valid Command");
+		} catch (Exception e) {
+			controller.update(e.getMessage());
+			}
 		
 	}
 
 	@Override
 	public void fileSizeCommand(String[] param) {
-		// TODO Auto-generated method stub
-		
+		try {
+			if (param.length==3){
+				File f=new File(param[2]);
+				if(f.exists()){
+					controller.update(f.length());
+				}
+				else throw new IOException("Not a Valid path");		
+			}
+			
+			else throw new IOException("Not a Valid Command");
+		} catch (Exception e) {
+			controller.update(e.getMessage());
+		}		
 	}
 
 	@Override
 	public void SolveCommand(String[] param) {
-		// TODO Auto-generated method stub
-		
+		new Thread(new Runnable() {
+			public void run() {
+		try {
+			if(param.length==3)
+			{
+				if(AllMazes.get(param[1])!=null)//get the array list for specific name
+				{
+				ArrayList<Maze3d> arraylist = new ArrayList<Maze3d>();
+				arraylist=AllMazes.get(param[1]);
+				Solution<Position> sol=new Solution<>();
+				ArrayList<Solution<Position>> arrsol = new ArrayList<Solution<Position>>();
+				Maze3dAdapter MA=new Maze3dAdapter(arraylist.get(arraylist.size()-1), 10);//cost 10
+				switch (param[2]) {
+				case "Astar-manhattan":
+					Searcher<Position> AstarsearcherManhattan=new Astar<Position>(new ManhattanDistance());
+					sol= AstarsearcherManhattan.search(MA);
+					if(Allsolutions.get(param[1])!=null)
+					{
+					arrsol=Allsolutions.get(param[1]);
+					}
+					arrsol.add(sol);
+					Allsolutions.put(param[1], arrsol);
+					controller.update("solution for "+param[1]+" is ready");
+					break;
+				case "Astar-air":
+					Searcher<Position> AstarsearcherAir=new Astar<Position>(new AirDistance());
+					sol= AstarsearcherAir.search(MA);
+					if(Allsolutions.get(param[1])!=null)
+					{
+					arrsol=Allsolutions.get(param[1]);
+					}
+					arrsol.add(sol);
+					Allsolutions.put(param[1], arrsol);
+					controller.update("solution for "+param[1]+" is ready");
+					break;
+				case "Bfs":
+					Searcher<Position> searcher=new Bfs<>();
+					sol= searcher.search(MA);
+					if(Allsolutions.get(param[1])!=null)
+					{
+					arrsol=Allsolutions.get(param[1]);
+					}
+					arrsol.add(sol);
+					Allsolutions.put(param[1], arrsol);
+					controller.update("solution for "+param[1]+" is ready");
+					break;
+
+				default:
+					break;
+				}
+				}
+				else throw new IOException("maze not found");
+			}
+			else throw new IOException("Not a Valid command");
+		} catch (Exception e) {
+			controller.update(e.getMessage());
+		}
+			}
+		}).start();
 	}
 
 	@Override
 	public void dislplaySolutionCommand(String[] param) {
-		// TODO Auto-generated method stub
-		
+		try {
+			if(param.length==3){
+				ArrayList<Solution<Position>> arrsol = new ArrayList<Solution<Position>>();
+				if(Allsolutions.get(param[2])!=null)
+				{
+				arrsol=Allsolutions.get(param[2]);
+				controller.update(arrsol.get(arrsol.size()-1));
+				}
+				else throw new IOException("maze not found");
+			}
+			else throw new IOException("Not a Valid command");
+		} catch (Exception e) {
+			controller.update(e.getMessage());
+		}
 	}
 
 	@Override
 	public void exitCommand() {
-		System.out.println("Good Bye");
+		controller.update("Good Bye");
 		
 	}
 	
