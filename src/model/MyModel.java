@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import algorithms.demo.Maze3dAdapter;
 import algorithms.io.MyCompressorOutputStream;
@@ -30,6 +33,12 @@ public class MyModel implements Model{
 	Controller controller;
 	HashMap<String, ArrayList<Maze3d>> AllMazes= new HashMap<>();
 	HashMap<String, ArrayList<Solution<Position>>> Allsolutions= new HashMap<>();
+	ExecutorService threadpool;
+	
+	
+	public MyModel() {
+		threadpool=Executors.newFixedThreadPool(10); //10 threads can run each time
+	}
 	
 	public void setController(Controller controller) {
 		this.controller = controller;
@@ -53,8 +62,11 @@ public class MyModel implements Model{
 
 	@Override
 	public void generateCommand(String[] param) {
-		new Thread(new Runnable() {
+		Thread Generate=new Thread(new Runnable() {
 			public void run() {
+				threadpool.execute(new Runnable() {
+					@Override
+					public void run() {
 		try {
 			if (param.length == 7){
 				ArrayList<Maze3d> arraylist = new ArrayList<Maze3d>();
@@ -66,16 +78,20 @@ public class MyModel implements Model{
 				Maze3d maze=mg.generate(mg.getDIMENSION(), mg.getWIDTH(), mg.getLENGTH());
 				arraylist.add(maze);
 					AllMazes.put(param[3],arraylist);
-						//Thread.sleep(10000);	//for checks only
+						//Thread.sleep(20000);	//for debugging only, 20 sec sleep
 					controller.update("maze "+param[3]+" is ready");
 			}
 					else throw new IOException("Not a Valid Command");
 			
 		} catch (Exception e) {
 			controller.update(e.getMessage());		}
+					}
+				});
 		
 	}
-		}).start();
+		});
+		Generate.start();
+
 	}
 
 	@Override
@@ -161,6 +177,7 @@ public class MyModel implements Model{
 						// Before converting to an int type, we check
 					      // to ensure that file is not larger than Integer.MAX_VALUE.
 					      if (length > Integer.MAX_VALUE) {
+					    	  in.close();
 					        throw new IOException("Could not completely read file " + f.getName() + " as it is too long (" + length + " bytes, max supported " + Integer.MAX_VALUE + ")");
 					      }
 						
@@ -225,8 +242,11 @@ public class MyModel implements Model{
 
 	@Override
 	public void SolveCommand(String[] param) {
-		new Thread(new Runnable() {
+		Thread Solve=new Thread(new Runnable() {
 			public void run() {
+				threadpool.execute(new Runnable() {
+					@Override
+					public void run() {
 		try {
 			if(param.length==3)
 			{
@@ -282,8 +302,11 @@ public class MyModel implements Model{
 		} catch (Exception e) {
 			controller.update(e.getMessage());
 		}
+					}
+				});
 			}
-		}).start();
+		});
+				Solve.start();
 	}
 
 	@Override
@@ -306,7 +329,22 @@ public class MyModel implements Model{
 
 	@Override
 	public void exitCommand() {
-		controller.update("Good Bye");
+		controller.update("shutting down");
+		threadpool.shutdown();
+		//wait 10 seconds over and over again until all running jobs have finished
+		@SuppressWarnings("unused")
+		boolean allTasksCompleted=false;
+		try {
+			while(!(allTasksCompleted=threadpool.awaitTermination(10, TimeUnit.SECONDS))){
+				controller.update("waiting for all threads to finish");
+			}
+			
+		} catch (InterruptedException e) {
+			controller.update(e.getMessage());
+		}
+		
+		
+		controller.update("all the tasks have finished, Good Bye");
 		
 	}
 	
