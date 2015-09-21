@@ -65,8 +65,8 @@ public class MyController implements Controller{
 		case "java.lang.String[]":
 			view.display(obj,new StringArrayDisplay());
 			break;
-		case "java.util.ArrayList":
-			view.display(obj,new ArrayListDisplay());
+		case "algorithms.mazeGenerators.Maze3d":
+			view.display(obj,new MazeDisplay());
 			break;
 		case "int[][]":
 			view.display(obj,new CrossDisplay());			
