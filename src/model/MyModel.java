@@ -77,7 +77,7 @@ public class MyModel implements Model{
 				Maze3dGenerator mg=new MyMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
 				Maze3d maze=mg.generate(mg.getDIMENSION(), mg.getWIDTH(), mg.getLENGTH());
 					AllMazes.put(param[3],maze);
-						//Thread.sleep(20000);	//for debugging only, 20 sec sleep
+					//	Thread.sleep(20000);	//for debugging only, 20 sec sleep
 					controller.update("maze "+param[3]+" is ready");
 			}
 					else throw new IOException("Not a Valid Command");
@@ -272,7 +272,8 @@ public class MyModel implements Model{
 					break;
 
 				default:
-					break;
+					throw new IOException("not a valid algorithm");
+					
 				}
 				}
 				else throw new IOException("maze not found");
