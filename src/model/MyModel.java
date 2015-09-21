@@ -6,13 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
 import algorithms.demo.Maze3dAdapter;
 import algorithms.io.MyCompressorOutputStream;
 import algorithms.io.MyDecompressorInputStream;
@@ -27,7 +24,6 @@ import algorithms.search.ManhattanDistance;
 import algorithms.search.Searcher;
 import algorithms.search.Solution;
 import controller.Controller;
-import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
 
 public class MyModel implements Model{
 
@@ -48,7 +44,11 @@ public class MyModel implements Model{
 	@Override
 	public void dirCommand(String[] param) {
 		try {
-			if (param.length == 2){
+			if(param.length==1){
+				File f = new File(".");
+				controller.update(f.list());
+			}
+			else if (param.length == 2){
 				File f = new File(param[1]);
 					if(f.exists())
 						controller.update(f.list());	
@@ -177,7 +177,7 @@ public class MyModel implements Model{
 					      // to ensure that file is not larger than Integer.MAX_VALUE.
 					      if (length > Integer.MAX_VALUE) {
 					    	  in.close();
-					        throw new IOException("Could not completely read file " + f.getName() + " as it is too long (" + length + " bytes, max supported " + Integer.MAX_VALUE + ")");
+					    	  throw new IOException("Could not completely read file " + f.getName() + " as it is too long (" + length + " bytes, max supported " + Integer.MAX_VALUE + ")");
 					      }
 						
 						byte[] b=new byte[(int)length];
@@ -185,7 +185,7 @@ public class MyModel implements Model{
 						in.close(); //closing stream
 						Maze3d fromfile = new Maze3d(b);
 						
-						if(AllMazes.get(param[3])!=null)//get the array list for specific name
+						if(AllMazes.get(param[3])!=null)//get the maze for specific name
 						{
 							throw new IOException("maze with same name already exist");
 						}
@@ -207,7 +207,7 @@ public class MyModel implements Model{
 				if(AllMazes.get(param[2])!=null)//get the array list for specific name
 				{
 				Maze3d maze=AllMazes.get(param[2]);
-				controller.update((long)maze.toByteArray().length);
+				controller.update(""+maze.GetMazeSizeInBytes()+" bytes");
 				}
 				
 				else throw new IOException("maze not found");	
@@ -225,7 +225,7 @@ public class MyModel implements Model{
 			if (param.length==3){
 				File f=new File(param[2]);
 				if(f.exists()){
-					controller.update(f.length());
+					controller.update(""+f.length()+" bytes");
 				}
 				else throw new IOException("Not a Valid path");		
 			}

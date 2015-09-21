@@ -5,6 +5,7 @@ import algorithms.search.Solution;
 
 public class SolDisplay implements DisplayType {
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void display(Object obj) {
 		
