@@ -10,7 +10,19 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 
 import controller.Command;
-
+/**
+ * 
+ * @author alon tal,omry dabush
+ * <h2>Cli - command line interface</h2>
+ *  waiting for user typing commands, checks if they are exist in the hash map.
+ * <br>
+ * if exist, deliver the command to the controller and from there to the model.
+ * @param in - bufferedReader
+ * @param out- PrintWriter
+ * @param hashCommand- hashmap between string to command
+ * 
+ *
+ */
 public class CLI {
 
 	BufferedReader in = null;
@@ -42,7 +54,13 @@ public class CLI {
 		});
 		t.start();
 	}	
-
+/**
+ * <h2>commandRecognizer</h2>
+ * gets String and split him by white space<br>
+ * if the string contains legal command the method returns the full command string
+ * @param s - String
+ * @return String, legal command
+ */
 	public String commandRecognizer (String s){
 		String[] stringCommand = s.split(" ");
 		switch (stringCommand[0]) {

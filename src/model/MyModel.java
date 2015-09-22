@@ -32,15 +32,33 @@ public class MyModel implements Model{
 	HashMap<String, Solution<Position>> Allsolutions= new HashMap<>();
 	ExecutorService threadpool;
 	
-	
+	/**
+	 * @author Alon Tal, Omry Dabush
+	 * <h2>MyModel Constructor</h2>
+	 * This constructor will initialize only the thread pool Data member
+	 * @param threadpool
+	 */
 	public MyModel() {
 		threadpool=Executors.newFixedThreadPool(10); //10 threads can run each time
 	}
+	
+	/**
+	 * <h2>setController</h2>
+	 * This method will initialize the controller<br>
+	 * @param controller
+	 */
 	
 	public void setController(Controller controller) {
 		this.controller = controller;
 	}
 
+	/**
+	 * <h2>dirCommand</h2>
+	 * This method will send to the Controller Class a list of files and folders</br>
+	 * to be presented in the path the was specified 
+	 * @param File f
+	 * @param Controller controller
+	 */
 	@Override
 	public void dirCommand(String[] param) {
 		try {
@@ -59,6 +77,12 @@ public class MyModel implements Model{
 			controller.update(e.getMessage());
 		}			
 	}
+/**
+ * <h2>generateCommand</h2>
+ * This method will activate the MyMaze3dGenerator generate method,<br>
+ * that will generate a new maze3d.
+ * @param Thread generate
+ */
 
 
 	@Override
@@ -116,21 +140,22 @@ public class MyModel implements Model{
 			if(param.length==8){
 				if(AllMazes.get(param[7])!=null)
 				{
-				Maze3d maze = AllMazes.get(param[7]);
-				if(param[4].equals("x")){
-					int[][] maze2dx=maze.getCrossSectionByX(Integer.parseInt(param[5]));
-					controller.update(maze2dx);
+					Maze3d maze = AllMazes.get(param[7]);
+					if(param[4].equals("x")){
+						int[][] maze2dx=maze.getCrossSectionByX(Integer.parseInt(param[5]));
+						controller.update(maze2dx);
+					}
+					else if(param[4].equals("y")){
+						int[][] maze2dy=maze.getCrossSectionByY(Integer.parseInt(param[5]));
+						controller.update(maze2dy);
+					}
+					else if(param[4].equals("z")){
+						int[][] maze2dz=maze.getCrossSectionByZ(Integer.parseInt(param[5]));
+						controller.update(maze2dz);
+					}
+					else throw new IOException("Wrong Axis");
 				}
-				if(param[4].equals("y")){
-					int[][] maze2dy=maze.getCrossSectionByY(Integer.parseInt(param[5]));
-					controller.update(maze2dy);
-				}
-				if(param[4].equals("z")){
-					int[][] maze2dz=maze.getCrossSectionByZ(Integer.parseInt(param[5]));
-					controller.update(maze2dz);
-				}
-				}
-				else throw new IOException("Wrong Axis");
+				else throw new IOException("Not a Valid Maze Name");
 			}
 			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
@@ -150,10 +175,10 @@ public class MyModel implements Model{
 				f.createNewFile();//create the file
 				if(f.exists()) // check if path is valid
 				{
-				OutputStream co=new MyCompressorOutputStream(new FileOutputStream(param[3])); //calling compressor
-				co.write(maze.toByteArray());//save the last maze that created
-				co.close();
-				controller.update("Maze "+param[2]+" Saved to "+param[3]);
+					OutputStream co=new MyCompressorOutputStream(new FileOutputStream(param[3])); //calling compressor
+					co.write(maze.toByteArray());//save the last maze that created
+					co.close();
+					controller.update("Maze "+param[2]+" Saved to "+param[3]);
 				}
 				}
 				else throw new IOException("Not a Valid path");
@@ -165,26 +190,49 @@ public class MyModel implements Model{
 	}
 
 	@Override
+//	public void loadCommand(String[] param) {
+//			try {
+//				if (param.length==4)
+//				{
+//					File f=new File(param[2]);
+//					if(f.exists()){
+//						InputStream in = new MyDecompressorInputStream(new FileInputStream(param[2]));
+//						long length = f.length(); //get the file size
+//						// Before converting to an int type, we check
+//					      // to ensure that file is not larger than Integer.MAX_VALUE.
+//					      if (length > Integer.MAX_VALUE) {
+//					    	  in.close();
+//					    	  throw new IOException("Could not completely read file " + f.getName() + " as it is too long (" + length + " bytes, max supported " + Integer.MAX_VALUE + ")");
+//					      }
+//						
+//						byte[] b=new byte[(int)length];
+//						in.read(b); 
+//						in.close(); //closing stream
+//						Maze3d fromfile = new Maze3d(b);
+//						
+//						if(AllMazes.get(param[3])!=null)//get the maze for specific name
+//						{
+//							throw new IOException("maze with same name already exist");
+//						}
+//						AllMazes.put(param[3], fromfile);
+//						controller.update("Load completed");
+//						}
+//					else throw new IOException("Not a Valid Path");
+//				}
+//				else throw new IOException("Not a Valid Command");
+//			} catch (Exception e) {
+//				controller.update(e.getMessage());
+//			}
 	public void loadCommand(String[] param) {
 			try {
 				if (param.length==4)
 				{
 					File f=new File(param[2]);
 					if(f.exists()){
-						InputStream in = new MyDecompressorInputStream(new FileInputStream(param[2]));
-						long length = f.length(); //get the file size
-						// Before converting to an int type, we check
-					      // to ensure that file is not larger than Integer.MAX_VALUE.
-					      if (length > Integer.MAX_VALUE) {
-					    	  in.close();
-					    	  throw new IOException("Could not completely read file " + f.getName() + " as it is too long (" + length + " bytes, max supported " + Integer.MAX_VALUE + ")");
-					      }
-						
-						byte[] b=new byte[(int)length];
-						in.read(b); 
-						in.close(); //closing stream
+						MyDecompressorInputStream in = new MyDecompressorInputStream(new FileInputStream(param[2]));
+						byte[] b = in.decompress();
 						Maze3d fromfile = new Maze3d(b);
-						
+						in.close();
 						if(AllMazes.get(param[3])!=null)//get the maze for specific name
 						{
 							throw new IOException("maze with same name already exist");
@@ -299,7 +347,7 @@ public class MyModel implements Model{
 				sol=Allsolutions.get(param[2]);
 				controller.update(sol);
 				}
-				else throw new IOException("maze not found");
+				else throw new IOException("dont have solution for "+param[2]);
 			}
 			else throw new IOException("Not a Valid command");
 		} catch (Exception e) {

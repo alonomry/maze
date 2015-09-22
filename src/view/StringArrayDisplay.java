@@ -1,5 +1,10 @@
 package view;
-
+/**
+ * 
+ * <h2>StringArrayDisplay</h1>
+ * casting obj to string[] and print him
+ *
+ */
 public class StringArrayDisplay implements DisplayType {
 
 	@Override
