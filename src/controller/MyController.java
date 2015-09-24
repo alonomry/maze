@@ -4,13 +4,28 @@ import java.util.HashMap;
 import model.Model;
 import view.*;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class MyController.
+ */
 public class MyController implements Controller{
 
+	/** The model. */
 	Model model;
+	
+	/** The view. */
 	View view;
+	
+	/**  hashmap between string to command. */
 	HashMap<String, Command> hashCommand;
 	
 	
+	/**
+	 * Instantiates a new MyController.
+	 *
+	 * @param m the model
+	 * @param v the View
+	 */
 	public MyController(Model m,View v) {
 		this.model = m;
 		this.view = v;
@@ -18,6 +33,9 @@ public class MyController implements Controller{
 		InitCommands();
 	}
 	
+	/**
+	 * Inits the hashmap commands.
+	 */
 	private void InitCommands() {
 		hashCommand.put("dir",new dirCommand());
 		hashCommand.put("generate 3d maze",new generateCommand());
@@ -35,27 +53,46 @@ public class MyController implements Controller{
 	
 	
 
+	/**
+	 * set the model
+	 */
 	@Override
 	public void setModel(Model m) {
 		this.model = m;
 		
 	}
 
+	/**
+	 * set the view
+	 */
 	@Override
 	public void setView(View v) {
 		this.view = v;
 		
 	}
 
+	/**
+	 * Gets the hash command.
+	 *
+	 * @return the hash command
+	 */
 	public HashMap<String, Command> getHashCommand() {
 		return hashCommand;
 	}
 
+	/**
+	 * gets string array from model and bring him to View
+	 * 
+	 */
 	@Override
 	public void display(String[] s) {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	/**
+	 * gets object from model, checking for type and inject to view the specific display for the object
+	 */
 	public void update(Object obj) {
 		String temp=obj.getClass().getCanonicalName();
 		switch (temp) {
@@ -96,6 +133,10 @@ public class MyController implements Controller{
 	// ----------------------------------------
 	
 	
+	/**
+	 * The Class dirCommand.
+	 * display the current dir or specific dir
+	 */
 	public class dirCommand implements Command{
 
 		@Override
@@ -105,6 +146,10 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class generateCommand.
+	 * generate new maze
+	 */
 	public class generateCommand implements Command{
 
 		@Override
@@ -115,6 +160,11 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class displayCommand.
+	 * gets String- maze name
+	 * display the maze 
+	 */
 	public class displayCommand implements Command{
 
 		@Override
@@ -125,6 +175,10 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class displayCrossSectionCommand.
+	 * display the cross section by given axis and maze name
+	 */
 	public class displayCrossSectionCommand implements Command{
 
 		@Override
@@ -134,6 +188,10 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class saveCommand.
+	 * save the maze to file
+	 */
 	public class saveCommand implements Command{
 
 		@Override
@@ -143,6 +201,10 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class loadCommand.
+	 * load maze from file
+	 */
 	public class loadCommand implements Command{
 
 		@Override
@@ -152,6 +214,10 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class mazeSizeCommand.
+	 * size of the maze object in running time
+	 */
 	public class mazeSizeCommand implements Command{
 
 		@Override
@@ -162,6 +228,10 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class fileSizeCommand.
+	 * size of maze file
+	 */
 	public class fileSizeCommand implements Command{
 
 		@Override
@@ -171,6 +241,10 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class solveCommand.
+	 * solving maze by given algorithm: Bfs, Astar-air, Astar-manhattan
+	 */
 	public class solveCommand implements Command{
 
 		@Override
@@ -181,6 +255,10 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class displaySolutionCommand.
+	 * display the solution for spesific maze
+	 */
 	public class displaySolutionCommand implements Command{
 
 		@Override
@@ -191,6 +269,10 @@ public class MyController implements Controller{
 		
 	}
 	
+	/**
+	 * The Class exitCommand.
+	 * stops all running threads and exit
+	 */
 	public class exitCommand implements Command{
 
 		@Override
