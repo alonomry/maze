@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
@@ -25,6 +24,18 @@ import algorithms.search.Searcher;
 import algorithms.search.Solution;
 import controller.Controller;
 
+
+/**
+ * @author Alon Tal, Omry Dabush
+ * <h1>MyModel</h1>
+ * this Class is responsible for all the calculation command and "Updating" the controller with every change<br>
+ * the class uses a few Data Member to store results and communicating with the controller
+ * @param Controller controller;
+ * @param HashMap<String, Maze3d> AllMazes
+ * @param HashMap<String, Solution<Position>> Allsolutions
+ * @param ExecutorService threadpool;
+ *
+ */
 public class MyModel implements Model{
 
 	Controller controller;
@@ -117,6 +128,13 @@ public class MyModel implements Model{
 
 	}
 
+	/**
+	 * <h2>displayCommand</h2>
+	 * This method receives a maze name as a String<br>
+	 * and see if the maze exist in a Hashmap of mazes<br>
+	 * if the maze does exist it will send the maze to the display for displaying
+	 * @param String mazeName
+	 */
 	@Override
 	public void displayCommand(String[] param) {
 		try {
@@ -134,6 +152,15 @@ public class MyModel implements Model{
 			}
 	}
 
+	/**
+	 * <h2>displayCrossSectionCommand</h2>
+	 * This method gets from the user witch cross section does he want to present<br>
+	 * by X,Y,Z calculate the cross section and send the result to the controller as int[][]
+	 * @param Maze3d maze
+	 * @param String X/Y/Z
+	 * @param String index
+	 * 
+	 */
 	@Override
 	public void displayCrossSectionCommand(String[] param) {
 		try {
@@ -164,6 +191,15 @@ public class MyModel implements Model{
 		
 	}
 
+	/**
+	 * <h2>saveCommand</h2>
+	 * This method creates a new File to see is the path provided is a valid one<br>
+	 * if so the is being compressed and to the file name provided by the user
+	 * @param File file
+	 * @param Maze3d maze
+	 * @param Outputstream co
+	 * 
+	 */
 	@Override
 	public void saveCommand(String[] param) {
 		try {
@@ -189,40 +225,17 @@ public class MyModel implements Model{
 			}		
 	}
 
+	
+	/**
+	 * <h2>loadCommand</h2>
+	 * This method creates a new File to see is the path provided is a valid one<br>
+	 * if so it get the compressed maze as byte[] and then performs a Decompression method and<br>
+	 * creates a new maze in the name provided by the user 
+	 * 
+	 * @param File f
+	 * @param Maze3d maze
+	 */
 	@Override
-//	public void loadCommand(String[] param) {
-//			try {
-//				if (param.length==4)
-//				{
-//					File f=new File(param[2]);
-//					if(f.exists()){
-//						InputStream in = new MyDecompressorInputStream(new FileInputStream(param[2]));
-//						long length = f.length(); //get the file size
-//						// Before converting to an int type, we check
-//					      // to ensure that file is not larger than Integer.MAX_VALUE.
-//					      if (length > Integer.MAX_VALUE) {
-//					    	  in.close();
-//					    	  throw new IOException("Could not completely read file " + f.getName() + " as it is too long (" + length + " bytes, max supported " + Integer.MAX_VALUE + ")");
-//					      }
-//						
-//						byte[] b=new byte[(int)length];
-//						in.read(b); 
-//						in.close(); //closing stream
-//						Maze3d fromfile = new Maze3d(b);
-//						
-//						if(AllMazes.get(param[3])!=null)//get the maze for specific name
-//						{
-//							throw new IOException("maze with same name already exist");
-//						}
-//						AllMazes.put(param[3], fromfile);
-//						controller.update("Load completed");
-//						}
-//					else throw new IOException("Not a Valid Path");
-//				}
-//				else throw new IOException("Not a Valid Command");
-//			} catch (Exception e) {
-//				controller.update(e.getMessage());
-//			}
 	public void loadCommand(String[] param) {
 			try {
 				if (param.length==4)
@@ -248,6 +261,12 @@ public class MyModel implements Model{
 			}
 	}
 
+	
+	/**
+	 * <h2>mazeSizeCommand</h2>
+	 * the method calculation the maze size in Bytes and uses a inner method from Maze3d Class
+	 * @param Maze3d maze
+	 */
 	@Override
 	public void mazeSizeCommand(String[] param) {
 		try {
@@ -267,6 +286,13 @@ public class MyModel implements Model{
 		
 	}
 
+	/**
+	 * <h2>fileSizeCommand</h2>
+	 * This method calculates the size of a compressed maze in a File in Bytes
+	 * and uses the built in Method to send the file size to the controller
+	 * @param File file
+	 * 
+	 */
 	@Override
 	public void fileSizeCommand(String[] param) {
 		try {
@@ -283,7 +309,19 @@ public class MyModel implements Model{
 			controller.update(e.getMessage());
 		}		
 	}
-
+	/**
+	 * <h2>SolveCommand</h2>
+	 * This method solve the maze in one of three algorithms and send a suitable message to the controller<br>
+	 * the user need to provide the  algorithm and the method will use the<br>
+	 * BFS,Astar-air,Astar-manhattan algorithms<br>
+	 * Ones finish the calculation it stores the result in a Hashmap of Solutions (Allsolution Data member)
+	 * @param Maze3d maze
+	 * @param Solution<Postion> sol
+	 * @param Maze3dAdapter MA
+	 * @param Searcher<Position> AstarsearcherManhattan
+	 * @param Searcher<Position> AstarsearcherAir
+	 * @param Searcher<Position> searcher
+	 */
 	@Override
 	public void SolveCommand(String[] param) {
 		Thread Solve=new Thread(new Runnable() {
@@ -337,6 +375,13 @@ public class MyModel implements Model{
 				Solve.start();
 	}
 
+/**
+ * <h2>dislplaySolutionCommand</h2>
+ * This method retrieves the result of a specific maze and send it to the controller
+ * @param Solution<Position> sol
+ * 
+ */
+	
 	@Override
 	public void dislplaySolutionCommand(String[] param) {
 		try {
@@ -354,7 +399,12 @@ public class MyModel implements Model{
 			controller.update(e.getMessage());
 		}
 	}
-
+/**
+ * <h2>exitCommand</h2>
+ * This method performs a controlled exit from all opened Threads with the use of Threadpool.Shutdown command
+ * Witch allows all open thread to finish and only then exit from the program.
+ * 
+ */
 	@Override
 	public void exitCommand() {
 		controller.update("shutting down");
