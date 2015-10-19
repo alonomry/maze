@@ -1,11 +1,14 @@
+
 package view;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Observable;
+import java.util.Observer;
 
-import controller.Command;
-// TODO: Auto-generated Javadoc
+import CliDisplays.DisplayType;
+import presenter.Command;
 
 /**
  * <h2>MyView</h2>
@@ -13,7 +16,7 @@ import controller.Command;
  * 
  */
 
-public class MyView implements View {
+public class MyView extends Observable implements View, Observer {
 	
 	/** The command line. */
 	CLI commandLine;
@@ -23,6 +26,7 @@ public class MyView implements View {
 	
 	/** The output from client. */
 	OutputStream outputFromClient;
+	
 	
 	/**
 	 * Instantiates a new my view.
@@ -51,6 +55,7 @@ public class MyView implements View {
 	 */
 	public void setCommandLine(HashMap<String,Command> newHashCommand) {
 		this.commandLine = new CLI(inputFromClient, outputFromClient, newHashCommand);
+		commandLine.addObserver(this);
 	}
 
 	/**
@@ -64,12 +69,24 @@ public class MyView implements View {
 		d.display(obj);		
 	}
 
+
 	/**
 	 * start method calls to CLI start method
 	 */
 	@Override
 	public void start() {
 		commandLine.start();
+//		setChanged();
+//		notifyObservers();
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		if (o == commandLine){
+			setChanged();
+			notifyObservers(arg);	
+		}
+		
 	}
 
 }

@@ -1,6 +1,7 @@
 package model;
 
-import controller.Controller;
+
+import presenter.Presenter;
 /**
  *<h2> Model Interface</h2>
  *This Interface dictates the behavior of our model
@@ -22,7 +23,7 @@ import controller.Controller;
  *
  */
 public interface Model {
-	public void setController(Controller controller);
+	public void setPresenter(Presenter controller);
 	public void dirCommand(String[] param);
 	public void generateCommand(String[] param);
 	public void displayCommand(String[] param);

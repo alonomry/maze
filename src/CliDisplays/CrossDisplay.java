@@ -1,4 +1,4 @@
-package view;
+package CliDisplays;
 
 import java.util.Arrays;
 /**

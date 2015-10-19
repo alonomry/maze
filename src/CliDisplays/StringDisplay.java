@@ -1,4 +1,5 @@
-package view;
+package CliDisplays;
+
 /**
  * 
  * <h2>StringDisplay</h1>
@@ -12,5 +13,5 @@ public class StringDisplay implements DisplayType {
 		
 		System.out.println((String)obj);
 
-}
+	}
 }

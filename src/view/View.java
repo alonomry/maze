@@ -1,4 +1,7 @@
 package view;
+
+import CliDisplays.DisplayType;
+
 /**
  * 
  * <h2>View-Interface</h1>

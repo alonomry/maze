@@ -4,10 +4,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Observable;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import algorithms.demo.Maze3dAdapter;
 import algorithms.io.MyCompressorOutputStream;
@@ -22,7 +29,7 @@ import algorithms.search.Bfs;
 import algorithms.search.ManhattanDistance;
 import algorithms.search.Searcher;
 import algorithms.search.Solution;
-import controller.Controller;
+import presenter.Presenter;
 
 
 /**
@@ -30,17 +37,17 @@ import controller.Controller;
  * <h1>MyModel</h1>
  * this Class is responsible for all the calculation command and "Updating" the controller with every change<br>
  * the class uses a few Data Member to store results and communicating with the controller
- * @param Controller controller;
+ * @param Presenter controller;
  * @param HashMap<String, Maze3d> AllMazes
  * @param HashMap<String, Solution<Position>> Allsolutions
  * @param ExecutorService threadpool;
  *
  */
-public class MyModel implements Model{
+public class MyModel extends Observable implements Model{
 
-	Controller controller;
+	Presenter presenter;
 	HashMap<String, Maze3d> AllMazes= new HashMap<>();
-	HashMap<String, Solution<Position>> Allsolutions= new HashMap<>();
+	HashMap<Maze3d, Solution<Position>> MazeToSolution;
 	ExecutorService threadpool;
 	
 	/**
@@ -49,18 +56,46 @@ public class MyModel implements Model{
 	 * This constructor will initialize only the thread pool Data member
 	 * @param threadpool
 	 */
+	
 	public MyModel() {
 		threadpool=Executors.newFixedThreadPool(10); //10 threads can run each time
+		loadMazeToSolution();
+		System.out.println(MazeToSolution.size());
+		}
+		
+	
+	@SuppressWarnings("unchecked")
+	public void loadMazeToSolution (){
+		File file = new File("mazes.maz");
+		if (file.exists()){
+			try {
+				ObjectInputStream in;
+				in = new ObjectInputStream(new FileInputStream("mazes.maz"));
+				try {
+					MazeToSolution = (HashMap<Maze3d, Solution<Position>>)in.readObject();
+				} catch (ClassNotFoundException e) {
+					setChanged();
+					notifyObservers(e.getMessage());
+				}
+				in.close();
+			} catch (IOException e) {
+				setChanged();
+				notifyObservers(e.getMessage());
+			
+			}
+		}
+		else 
+			MazeToSolution =  new HashMap<>();
 	}
 	
 	/**
-	 * <h2>setController</h2>
+	 * <h2>setPresenter</h2>
 	 * This method will initialize the controller<br>
-	 * @param controller
+	 * @param presenter
 	 */
 	
-	public void setController(Controller controller) {
-		this.controller = controller;
+	public void setPresenter(Presenter presenter) {
+		this.presenter = presenter;
 	}
 
 	/**
@@ -68,24 +103,30 @@ public class MyModel implements Model{
 	 * This method will send to the Controller Class a list of files and folders</br>
 	 * to be presented in the path the was specified 
 	 * @param File f
-	 * @param Controller controller
+	 * @param Presenter controller
 	 */
 	@Override
 	public void dirCommand(String[] param) {
 		try {
 			if(param.length==1){
 				File f = new File(".");
-				controller.update(f.list());
+				//presenter.update(f.list());------MVC------
+				setChanged();
+				notifyObservers(f.list());
 			}
 			else if (param.length == 2){
 				File f = new File(param[1]);
-					if(f.exists())
-						controller.update(f.list());	
+					if(f.exists()){
+						//presenter.update(f.list());------MVC------
+						setChanged();
+						notifyObservers(f.list());
+					}
 					else throw new IOException("Not a Valid Path");
 			}
 			else throw new IOException("Not a Valid command");
 		} catch (Exception e) {
-			controller.update(e.getMessage());
+			setChanged();
+			notifyObservers(e.getMessage());
 		}			
 	}
 /**
@@ -94,38 +135,46 @@ public class MyModel implements Model{
  * that will generate a new maze3d.
  * @param Thread generate
  */
-
-
 	@Override
 	public void generateCommand(String[] param) {
-		Thread Generate=new Thread(new Runnable() {
-			public void run() {
-				threadpool.execute(new Runnable() {
-					@Override
-					public void run() {
-		try {
-			if (param.length == 7){
-				if(AllMazes.get(param[3])!=null)
-				{
-					throw new IOException("maze with same name already exist");
-				}
-				Maze3dGenerator mg=new MyMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
-				Maze3d maze=mg.generate(mg.getDIMENSION(), mg.getWIDTH(), mg.getLENGTH());
-					AllMazes.put(param[3],maze);
-					//	Thread.sleep(20000);	//for debugging only, 20 sec sleep
-					controller.update("maze "+param[3]+" is ready");
-			}
-					else throw new IOException("Not a Valid Command");
-			
-		} catch (Exception e) {
-			controller.update(e.getMessage());		}
-					}
-				});
-		
-	}
-		});
-		Generate.start();
+		Future<Maze3d> future = threadpool.submit(new Callable<Maze3d>() {
 
+			@Override
+			public Maze3d call() throws Exception {
+				try {
+					if (param.length == 7){
+						if(AllMazes.get(param[3])!=null)
+						{
+							throw new IOException("maze with same name already exist");
+						}
+						Maze3dGenerator mg=new MyMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
+						Maze3d maze=mg.generate(mg.getDIMENSION(), mg.getWIDTH(), mg.getLENGTH());
+							AllMazes.put(param[3],maze);
+							//	Thread.sleep(20000);	//for debugging only, 20 sec sleep
+							//presenter.update("maze "+param[3]+" is ready"); ------MVC------
+							setChanged();
+							notifyObservers("maze "+param[3]+" is ready");
+							return maze;
+					}
+							else throw new IOException("Not a Valid Command");
+					
+				} catch (Exception e) {
+					//presenter.update(e.getMessage());------MVC------
+					setChanged();
+					notifyObservers(e.getMessage());
+					return null;
+					}
+
+			}
+		});
+		try {
+			future.get();
+		} catch (InterruptedException e) {
+				e.printStackTrace();
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -142,13 +191,17 @@ public class MyModel implements Model{
 				if(AllMazes.get(param[1])!=null)
 				{
 				Maze3d maze = AllMazes.get(param[1]);
-				controller.update(maze);
+				//presenter.update(maze);------MVC------
+				setChanged();
+				notifyObservers(maze);
 				}
 				else throw new IOException("Not a Valid Maze Name");
 			}
 			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
-			controller.update(e.getMessage());
+			//presenter.update(e.getMessage());------MVC------
+			setChanged();
+			notifyObservers(e.getMessage());
 			}
 	}
 
@@ -170,15 +223,21 @@ public class MyModel implements Model{
 					Maze3d maze = AllMazes.get(param[7]);
 					if(param[4].equals("x")){
 						int[][] maze2dx=maze.getCrossSectionByX(Integer.parseInt(param[5]));
-						controller.update(maze2dx);
+						//presenter.update(maze2dx);------MVC------
+						setChanged();
+						notifyObservers(maze2dx);
 					}
 					else if(param[4].equals("y")){
 						int[][] maze2dy=maze.getCrossSectionByY(Integer.parseInt(param[5]));
-						controller.update(maze2dy);
+						//presenter.update(maze2dy);------MVC------
+						setChanged();
+						notifyObservers(maze2dy);
 					}
 					else if(param[4].equals("z")){
 						int[][] maze2dz=maze.getCrossSectionByZ(Integer.parseInt(param[5]));
-						controller.update(maze2dz);
+						//presenter.update(maze2dz);------MVC------
+						setChanged();
+						notifyObservers(maze2dz);
 					}
 					else throw new IOException("Wrong Axis");
 				}
@@ -186,7 +245,9 @@ public class MyModel implements Model{
 			}
 			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
-			controller.update(e.getMessage());
+			//presenter.update(e.getMessage());------MVC------
+			setChanged();
+			notifyObservers(e.getMessage());
 			}
 		
 	}
@@ -214,14 +275,18 @@ public class MyModel implements Model{
 					OutputStream co=new MyCompressorOutputStream(new FileOutputStream(param[3])); //calling compressor
 					co.write(maze.toByteArray());//save the last maze that created
 					co.close();
-					controller.update("Maze "+param[2]+" Saved to "+param[3]);
+					//presenter.update("Maze "+param[2]+" Saved to "+param[3]);------MVC------
+					setChanged();
+					notifyObservers("Maze "+param[2]+" Saved to "+param[3]);
 				}
 				}
 				else throw new IOException("Not a Valid path");
 			}
 			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
-			controller.update(e.getMessage());
+			//presenter.update(e.getMessage());------MVC------
+			setChanged();
+			notifyObservers(e.getMessage());
 			}		
 	}
 
@@ -251,13 +316,17 @@ public class MyModel implements Model{
 							throw new IOException("maze with same name already exist");
 						}
 						AllMazes.put(param[3], fromfile);
-						controller.update("Load completed");
+						//presenter.update("Load completed");------MVC------
+						setChanged();
+						notifyObservers("Load completed");
 						}
 					else throw new IOException("Not a Valid Path");
 				}
 				else throw new IOException("Not a Valid Command");
 			} catch (Exception e) {
-				controller.update(e.getMessage());
+				//presenter.update(e.getMessage());------MVC------
+				setChanged();
+				notifyObservers(e.getMessage());
 			}
 	}
 
@@ -274,14 +343,18 @@ public class MyModel implements Model{
 				if(AllMazes.get(param[2])!=null)//get the array list for specific name
 				{
 				Maze3d maze=AllMazes.get(param[2]);
-				controller.update(""+maze.GetMazeSizeInBytes()+" bytes");
+				//presenter.update(""+maze.GetMazeSizeInBytes()+" bytes");------MVC------
+				setChanged();
+				notifyObservers(""+maze.GetMazeSizeInBytes()+" bytes");
 				}
 				
 				else throw new IOException("maze not found");	
 			}
 			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
-			controller.update(e.getMessage());
+			//presenter.update(e.getMessage());------MVC------
+			setChanged();
+			notifyObservers(e.getMessage());
 			}
 		
 	}
@@ -299,14 +372,18 @@ public class MyModel implements Model{
 			if (param.length==3){
 				File f=new File(param[2]);
 				if(f.exists()){
-					controller.update(""+f.length()+" bytes");
+					//presenter.update(""+f.length()+" bytes");------MVC------
+					setChanged();
+					notifyObservers(""+f.length()+" bytes");
 				}
 				else throw new IOException("Not a Valid path");		
 			}
 			
 			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
-			controller.update(e.getMessage());
+			//presenter.update(e.getMessage());------MVC------
+			setChanged();
+			notifyObservers(e.getMessage());
 		}		
 	}
 	/**
@@ -322,58 +399,80 @@ public class MyModel implements Model{
 	 * @param Searcher<Position> AstarsearcherAir
 	 * @param Searcher<Position> searcher
 	 */
+	
 	@Override
-	public void SolveCommand(String[] param) {
-		Thread Solve=new Thread(new Runnable() {
-			public void run() {
-				threadpool.execute(new Runnable() {
-					@Override
-					public void run() {
-		try {
-			if(param.length==3)
-			{
-				if(AllMazes.get(param[1])!=null)//get the array list for specific name
-				{
-				Maze3d maze=AllMazes.get(param[1]);
-				Solution<Position> sol=new Solution<>();
-				Maze3dAdapter MA=new Maze3dAdapter(maze, 10);//cost 10
-				switch (param[2]) {
-				case "Astar-manhattan":
-					Searcher<Position> AstarsearcherManhattan=new Astar<Position>(new ManhattanDistance());
-					sol= AstarsearcherManhattan.search(MA);
-					Allsolutions.put(param[1], sol);
-					controller.update("solution for "+param[1]+" is ready");
-					break;
-				case "Astar-air":
-					Searcher<Position> AstarsearcherAir=new Astar<Position>(new AirDistance());
-					sol= AstarsearcherAir.search(MA);
-					Allsolutions.put(param[1], sol);
-					controller.update("solution for "+param[1]+" is ready");
-					break;
-				case "Bfs":
-					Searcher<Position> searcher=new Bfs<>();
-					sol= searcher.search(MA);
-					Allsolutions.put(param[1], sol);
-					controller.update("solution for "+param[1]+" is ready");
-					break;
-
-				default:
-					throw new IOException("not a valid algorithm");
-					
-				}
-				}
-				else throw new IOException("maze not found");
-			}
-			else throw new IOException("Not a Valid command");
-		} catch (Exception e) {
-			controller.update(e.getMessage());
-		}
+	public void SolveCommand(String[] param){
+		threadpool.submit(new Callable<Solution<Position>>() {
+		//		Future<Solution<Position>> future = 	
+		@Override
+		public Solution<Position> call() throws Exception {
+			Solution<Position> sol=new Solution<Position>();
+				try {
+						Maze3d m = AllMazes.get(param[1]);
+						if(MazeToSolution.containsKey(m)){
+						setChanged();
+						notifyObservers("solution for "+param[1]+" is already exist");
+						return sol;
+						}
+						else if(param.length==3)
+						{
+							if(AllMazes.get(param[1])!=null)//get the array list for specific name
+							{
+								Maze3d maze=AllMazes.get(param[1]);
+								Maze3dAdapter MA=new Maze3dAdapter(maze, 10);//cost 10
+								switch (param[2]) {
+									case "Astar-manhattan":
+										Searcher<Position> AstarsearcherManhattan=new Astar<Position>(new ManhattanDistance());
+										sol= AstarsearcherManhattan.search(MA);
+										MazeToSolution.put(maze,sol);
+										//presenter.update("solution for "+param[1]+" is ready");------MVC------
+										setChanged();
+										notifyObservers("solution for "+param[1]+" is ready");
+										return sol;
+									case "Astar-air":
+										Searcher<Position> AstarsearcherAir=new Astar<Position>(new AirDistance());
+										sol= AstarsearcherAir.search(MA);
+										MazeToSolution.put(maze,sol);
+										//presenter.update("solution for "+param[1]+" is ready");------MVC------
+										setChanged();
+										notifyObservers("solution for "+param[1]+" is ready");
+										return sol;
+									case "Bfs":
+										Searcher<Position> searcher=new Bfs<>();
+										sol= searcher.search(MA);
+										MazeToSolution.put(maze, sol);
+										//presenter.update("solution for "+param[1]+" is ready");------MVC------
+										setChanged();
+										notifyObservers("solution for "+param[1]+" is ready");
+										return sol;
+			
+									default:
+										throw new IOException("not a valid algorithm");
+									
+									}
+							}
+							else throw new IOException("maze not found");
 					}
-				});
+					else throw new IOException("Not a Valid command");
+	
+				} catch (Exception e) {
+					//presenter.update(e.getMessage());------MVC------
+					setChanged();
+					notifyObservers(e.getMessage());
+					return null;
+				}
+				
 			}
 		});
-				Solve.start();
+//		try {
+//			future.get();
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		} catch (ExecutionException e) {
+//			e.printStackTrace();
+//		}
 	}
+	
 
 /**
  * <h2>dislplaySolutionCommand</h2>
@@ -386,43 +485,68 @@ public class MyModel implements Model{
 	public void dislplaySolutionCommand(String[] param) {
 		try {
 			if(param.length==3){
-				Solution<Position> sol=new Solution<>();
-				if(Allsolutions.get(param[2])!=null)
-				{
-				sol=Allsolutions.get(param[2]);
-				controller.update(sol);
+				Solution<Position> sol = new Solution<>();
+				if(MazeToSolution.get(AllMazes.get(param[2]))!=null)
+				{	
+					sol = MazeToSolution.get(AllMazes.get(param[2]));
+					//presenter.update(sol);------MVC------
+					setChanged();
+					notifyObservers(sol);
 				}
 				else throw new IOException("dont have solution for "+param[2]);
 			}
 			else throw new IOException("Not a Valid command");
 		} catch (Exception e) {
-			controller.update(e.getMessage());
+			//presenter.update(e.getMessage());------MVC------
+			setChanged();
+			notifyObservers(e.getMessage());
 		}
 	}
 /**
  * <h2>exitCommand</h2>
  * This method performs a controlled exit from all opened Threads with the use of Threadpool.Shutdown command
  * Witch allows all open thread to finish and only then exit from the program.
+ * @throws IOException 
  * 
  */
 	@Override
 	public void exitCommand() {
-		controller.update("shutting down");
+		setChanged();
+		notifyObservers("Shutting Down");
+		
+    	if (!MazeToSolution.isEmpty()){
+    		
+    		
+			try {
+				ObjectOutputStream out;
+				out = new ObjectOutputStream(new FileOutputStream("mazes.maz"));
+	    		out.writeObject(MazeToSolution);
+	    		out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+    	}
+		
 		threadpool.shutdown();
 		//wait 10 seconds over and over again until all running jobs have finished
 		@SuppressWarnings("unused")
 		boolean allTasksCompleted=false;
 		try {
 			while(!(allTasksCompleted=threadpool.awaitTermination(10, TimeUnit.SECONDS))){
-				controller.update("waiting for all threads to finish");
+				//presenter.update("waiting for all threads to finish");------MVC------
+				setChanged();
+				notifyObservers("waiting for all threads to finish");
 			}
 			
 		} catch (InterruptedException e) {
-			controller.update(e.getMessage());
+			//presenter.update(e.getMessage());------MVC------
+			setChanged();
+			notifyObservers(e.getMessage());
 		}
 		
-		
-		controller.update("all tasks have been completed, Good Bye");
+		setChanged();
+		notifyObservers("all tasks have been completed, Good Bye");
 		
 	}
 	

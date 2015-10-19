@@ -1,4 +1,4 @@
-package view;
+package CliDisplays;
 
 import algorithms.mazeGenerators.Maze3d;
 /**

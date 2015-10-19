@@ -8,8 +8,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Observable;
 
-import controller.Command;
+import presenter.Command;
 /**
  * 
  * @author alon tal,omry dabush
@@ -23,11 +24,12 @@ import controller.Command;
  * 
  *
  */
-public class CLI {
+public class CLI extends Observable{
 
 	BufferedReader in = null;
 	PrintWriter out = null;
 	HashMap<String, Command> hashCommand;
+	
 	public CLI(InputStream inputFromClient, OutputStream outputFromClient, HashMap<String,Command> newHashCommand) {
 		this.in = new BufferedReader (new InputStreamReader(inputFromClient));
 		this.out = new PrintWriter(new OutputStreamWriter(outputFromClient));
@@ -41,12 +43,17 @@ public class CLI {
 					while(!(line = in.readLine()).equals("exit")){
 							String theCommand = commandRecognizer(line);
 							String[] stringCommand = line.split(" ");
-							if (!(theCommand == null))
-								hashCommand.get(theCommand).doCommand(stringCommand);
+							if (!(theCommand == null)){
+								Command command = hashCommand.get(theCommand);
+								command.setStringCommand(stringCommand);
+								setChanged();
+								notifyObservers(command);
+							}
 							else
 								System.out.println("Worng Command");
 					}
-					hashCommand.get("exit").doCommand(null);
+					setChanged();
+					notifyObservers(hashCommand.get("exit"));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -54,50 +61,50 @@ public class CLI {
 		});
 		t.start();
 	}	
-/**
- * <h2>commandRecognizer</h2>
- * gets String and split him by white space<br>
- * if the string contains legal command the method returns the full command string
- * @param s - String
- * @return String, legal command
- */
-	public String commandRecognizer (String s){
-		String[] stringCommand = s.split(" ");
-		switch (stringCommand[0]) {
-		case "dir":
-			return "dir";
-		case "generate":
-			if (s.contains("generate 3d maze"))
-				return "generate 3d maze";
-			break;
-		case "save":
-			if (s.contains("save maze"))
-				return "save maze";
-			break;
-		case "load":
-			if (s.contains("load maze"))
-				return "load maze";
-			break;
-		case "maze":
-			if (s.contains("maze size"))
-				return "maze size";
-			break;
-		case "file":
-			if (s.contains("file size"))
-				return "file size";
-			break;
-		case "solve":
-				return "solve";
-		case "display":
-			if (s.contains("display cross section by"))
-				return "display cross section by";
-			if (s.contains("display solution"))
-				return "display solution";	
-			return "display";
-		default:
-			break;
-		}
-		return null;	
+	/**
+	 * <h2>commandRecognizer</h2>
+	 * gets String and split him by white space<br>
+	 * if the string contains legal command the method returns the full command string
+	 * @param s - String
+	 * @return String, legal command
+	 */
+		public String commandRecognizer (String s){
+			String[] stringCommand = s.split(" ");
+			switch (stringCommand[0]) {
+			case "dir":
+				return "dir";
+			case "generate":
+				if (s.contains("generate 3d maze"))
+					return "generate 3d maze";
+				break;
+			case "save":
+				if (s.contains("save maze"))
+					return "save maze";
+				break;
+			case "load":
+				if (s.contains("load maze"))
+					return "load maze";
+				break;
+			case "maze":
+				if (s.contains("maze size"))
+					return "maze size";
+				break;
+			case "file":
+				if (s.contains("file size"))
+					return "file size";
+				break;
+			case "solve":
+					return "solve";
+			case "display":
+				if (s.contains("display cross section by"))
+					return "display cross section by";
+				if (s.contains("display solution"))
+					return "display solution";	
+				return "display";
+			default:
+				break;
+			}
+			return null;		
 	}
 }
 

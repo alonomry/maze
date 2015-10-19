@@ -1,4 +1,4 @@
-package view;
+package CliDisplays;
 /**
  * 
  * <h2>DisplayType-interface</h2>

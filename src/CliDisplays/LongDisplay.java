@@ -1,4 +1,5 @@
-package view;
+package CliDisplays;
+
 /**
  * 
  * <h2>LongDisplay</h1>
