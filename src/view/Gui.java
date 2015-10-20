@@ -2,6 +2,8 @@ package view;
 
 import java.util.HashMap;
 import java.util.Observable;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -16,14 +18,15 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import CliDisplays.DisplayType;
+import CliDisplays.SolDisplay;
 import algorithms.mazeGenerators.Maze3d;
+import algorithms.mazeGenerators.Position;
+import algorithms.search.Solution;
 import presenter.Command;
 
 
@@ -36,6 +39,7 @@ public class Gui extends Observable implements View {
 	MazeWindow mazewidow;
 	String fileName;
 	Shell shell;
+
 	
 	public Gui(String title, int width, int height) {
 		this.mazewidow=new MazeWindow(title, width, height);
@@ -49,15 +53,6 @@ public class Gui extends Observable implements View {
 	
 	private void InitButtons() {
 		
-		Menu menuBar, fileMenu, helpMenu;
-
-		  MenuItem fileMenuHeader, helpMenuHeader;
-
-		  MenuItem fileExitItem, filePropertiesItem, helpGetHelpItem;
-		  
-		
-		  
-	
 		
 		buttons.put("generate",new Listener() {
 			
@@ -153,12 +148,24 @@ public class Gui extends Observable implements View {
 					
 					@Override
 					public void widgetSelected(SelectionEvent arg0) {
-						String[] line={"solve",T.getText(),"Astar-air"};
+						if(CharAndEnterIsEqual()){
+							String[] line={"solve",T.getText(),"Astar-air"};
+							Command command = hashCommand.get("solve");
+							command.setStringCommand(line);
+							setChanged();
+							notifyObservers(command);
+							sol.close();
+						}
+						else{
+						String[] line={"solve",T.getText(),"Astar-air",Integer.toString(((Maze3D)(mazewidow.maze)).getCharacterY()),
+								Integer.toString(((Maze3D)(mazewidow.maze)).getCharacterZ()),
+								Integer.toString(((Maze3D)(mazewidow.maze)).getCharacterX())};
 						Command command = hashCommand.get("solve");
 						command.setStringCommand(line);
 						setChanged();
 						notifyObservers(command);
 						sol.close();
+						}
 						
 					}
 
@@ -275,7 +282,8 @@ public class Gui extends Observable implements View {
 			this.mazewidow.maze.setExit(((Maze3d)obj).getExit().getDim(),((Maze3d)obj).getExit().getWid(),((Maze3d)obj).getExit().getLen());
 			this.mazewidow.maze.setMazeData(((Maze3d)obj).getCrossSectionByY(((Maze3d)obj).getEnter().getDim()));
 			this.mazewidow.maze.setCharacterPosition(((Maze3d)obj).getEnter().getDim(),((Maze3d)obj).getEnter().getWid(),((Maze3d)obj).getEnter().getLen());
-
+			this.mazewidow.maze.setEnter(((Maze3d)obj).getEnter().getDim(),((Maze3d)obj).getEnter().getWid(),((Maze3d)obj).getEnter().getLen());
+			
 				break;
 			case "java.lang.String":
 			{
@@ -303,7 +311,13 @@ public class Gui extends Observable implements View {
 					
 				}
 				break;	
+
 			}
+			case "algorithms.search.Solution":
+
+								mazewidow.WalkToExit((Solution<Position>)obj);
+							
+				break;
 			default:
 				break;
 				
@@ -311,6 +325,8 @@ public class Gui extends Observable implements View {
 			
 		
 	}
+	
+	
 	
 	public void setCommandLine(HashMap<String, Command> newhashCommand) {
 		this.hashCommand = new HashMap<>(newhashCommand);
@@ -323,6 +339,18 @@ public class Gui extends Observable implements View {
 		mazewidow.run();
 		
 	}
+	
+	public boolean CharAndEnterIsEqual(){
+		if(((Maze3D)(mazewidow.maze)).getCharacterX()==((Maze3D)(mazewidow.maze)).getEnterX()&&
+				((Maze3D)(mazewidow.maze)).getCharacterY()==((Maze3D)(mazewidow.maze)).getEnterY()&&
+				((Maze3D)(mazewidow.maze)).getCharacterZ()==((Maze3D)(mazewidow.maze)).getEnterZ()){
+			return true;
+		}
+		return false;	
+	}
+	
+	
+	
 }
 		
 		

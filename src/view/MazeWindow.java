@@ -4,65 +4,46 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Canvas;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 
-import CliDisplays.DisplayType;
-import CliDisplays.MazeDisplay;
-import CliDisplays.StringArrayDisplay;
-import CliDisplays.StringDisplay;
-import algorithms.mazeGenerators.Maze3d;
-import javafx.collections.SetChangeListener;
+import algorithms.mazeGenerators.Position;
+import algorithms.search.Solution;
 import presenter.Command;
 
 public class MazeWindow extends BasicWindow {//implements View {
 
-	Timer timer;
-	TimerTask task;
+	
 	String fileName;
 	HashMap<String, Command> hashCommand;
 	HashMap<String,Listener> buttons= new HashMap<>();
 	MazeDisplayer maze;
 	KeyListener CanvasKeyListener;
+	Timer timer;
+	TimerTask task;
 	
 	
 	public MazeWindow(String title, int width, int height) {
 		super(title, width, height);
 	}
 
-	private void randomWalk(MazeDisplayer maze){
-		Random r=new Random();
-		boolean b1,b2;
-		b1=r.nextBoolean();
-		b2=r.nextBoolean();
-		if(b1&&b2)
-			maze.moveUp();
-		if(b1&&!b2)
-			maze.moveDown();
-		if(!b1&&b2)
-			maze.moveRight();
-		if(!b1&&!b2)
-			maze.moveLeft();
-		
-		maze.redraw();
+	public void WalkToExit(Solution<Position> sol){
+	for(int i= sol.getSolution().size()-1;i>=0;i--)
+	{								
+		maze.setCharacterPosition(sol.getSolution().get(i).getState().getDim(), sol.getSolution().get(i).getState().getWid(), sol.getSolution().get(i).getState().getLen());
+		try {
+			Thread.sleep((long) (0.3 * 1000));
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+	}
 	}
 	
 	@Override

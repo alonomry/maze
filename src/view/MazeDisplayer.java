@@ -40,6 +40,8 @@ public abstract class MazeDisplayer extends Canvas{
 	public abstract  void setCharacterPosition(int dim,int wid,int len);
 	
 	public abstract  void setExit(int dim,int wid,int len);
+	
+	public abstract  void setEnter(int dim,int wid,int len);
 
 	public abstract void moveUp();
 

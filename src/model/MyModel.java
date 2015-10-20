@@ -49,6 +49,7 @@ public class MyModel extends Observable implements Model{
 	HashMap<String, Maze3d> AllMazes= new HashMap<>();
 	HashMap<Maze3d, Solution<Position>> MazeToSolution;
 	ExecutorService threadpool;
+	Position OriginalEnter;
 	
 	/**
 	 * @author Alon Tal, Omry Dabush
@@ -60,7 +61,7 @@ public class MyModel extends Observable implements Model{
 	public MyModel() {
 		threadpool=Executors.newFixedThreadPool(10); //10 threads can run each time
 		loadMazeToSolution();
-		System.out.println(MazeToSolution.size());
+	//	System.out.println(MazeToSolution.size());
 		}
 		
 	
@@ -408,23 +409,38 @@ public class MyModel extends Observable implements Model{
 		public Solution<Position> call() throws Exception {
 			Solution<Position> sol=new Solution<Position>();
 				try {
-						Maze3d m = AllMazes.get(param[1]);
-						if(MazeToSolution.containsKey(m)){
+						Maze3d m1 = AllMazes.get(param[1]);
+						Maze3d m=new Maze3d(AllMazes.get(param[1]).toByteArray());
+						if(MazeToSolution.containsKey(m1)){
+							
+						OriginalEnter=m.getEnter();
+						if(param.length==6)
+						{
+						Position NewEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
+						m.setEnter(NewEnter);
+						}
+						else{
 						setChanged();
 						notifyObservers("solution for "+param[1]+" is already exist");
 						return sol;
 						}
-						else if(param.length==3)
+						
+						}
+						if(param.length==3||param.length==6)
 						{
 							if(AllMazes.get(param[1])!=null)//get the array list for specific name
 							{
-								Maze3d maze=AllMazes.get(param[1]);
-								Maze3dAdapter MA=new Maze3dAdapter(maze, 10);//cost 10
+								Maze3dAdapter MA=new Maze3dAdapter(m, 10);//cost 10
 								switch (param[2]) {
 									case "Astar-manhattan":
 										Searcher<Position> AstarsearcherManhattan=new Astar<Position>(new ManhattanDistance());
 										sol= AstarsearcherManhattan.search(MA);
-										MazeToSolution.put(maze,sol);
+										if(param.length==3)
+											MazeToSolution.put(m1,sol);
+										else if(param.length==6){
+											setChanged();
+											notifyObservers(sol);
+										}
 										//presenter.update("solution for "+param[1]+" is ready");------MVC------
 										setChanged();
 										notifyObservers("solution for "+param[1]+" is ready");
@@ -432,7 +448,13 @@ public class MyModel extends Observable implements Model{
 									case "Astar-air":
 										Searcher<Position> AstarsearcherAir=new Astar<Position>(new AirDistance());
 										sol= AstarsearcherAir.search(MA);
-										MazeToSolution.put(maze,sol);
+										if(param.length==3)
+											MazeToSolution.put(m1,sol);
+										else if(param.length==6){
+											setChanged();
+											notifyObservers(sol);
+											return sol;
+										}
 										//presenter.update("solution for "+param[1]+" is ready");------MVC------
 										setChanged();
 										notifyObservers("solution for "+param[1]+" is ready");
@@ -440,7 +462,12 @@ public class MyModel extends Observable implements Model{
 									case "Bfs":
 										Searcher<Position> searcher=new Bfs<>();
 										sol= searcher.search(MA);
-										MazeToSolution.put(maze, sol);
+										if(param.length==3)
+											MazeToSolution.put(m1, sol);
+										else if(param.length==6){
+											setChanged();
+											notifyObservers(sol);
+										}
 										//presenter.update("solution for "+param[1]+" is ready");------MVC------
 										setChanged();
 										notifyObservers("solution for "+param[1]+" is ready");
