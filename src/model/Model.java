@@ -35,5 +35,6 @@ public interface Model {
 	public void SolveCommand(String[] param);
 	public void dislplaySolutionCommand(String[] param);
 	public void exitCommand();
+	public void setProperties(String path);
 	
 }

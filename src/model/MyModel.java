@@ -23,6 +23,7 @@ import algorithms.mazeGenerators.Maze3d;
 import algorithms.mazeGenerators.Maze3dGenerator;
 import algorithms.mazeGenerators.MyMaze3dGenerator;
 import algorithms.mazeGenerators.Position;
+import algorithms.mazeGenerators.SimpleMaze3dGenerator;
 import algorithms.search.AirDistance;
 import algorithms.search.Astar;
 import algorithms.search.Bfs;
@@ -30,6 +31,7 @@ import algorithms.search.ManhattanDistance;
 import algorithms.search.Searcher;
 import algorithms.search.Solution;
 import presenter.Presenter;
+import presenter.Properties;
 
 
 /**
@@ -50,6 +52,7 @@ public class MyModel extends Observable implements Model{
 	HashMap<Maze3d, Solution<Position>> MazeToSolution;
 	ExecutorService threadpool;
 	Position OriginalEnter;
+	Properties properties;
 	
 	/**
 	 * @author Alon Tal, Omry Dabush
@@ -59,9 +62,9 @@ public class MyModel extends Observable implements Model{
 	 */
 	
 	public MyModel() {
-		threadpool=Executors.newFixedThreadPool(10); //10 threads can run each time
+		loadProperties();
+		threadpool=Executors.newFixedThreadPool(Integer.parseInt(this.properties.getMaxTreads()));
 		loadMazeToSolution();
-	//	System.out.println(MazeToSolution.size());
 		}
 		
 	
@@ -88,6 +91,11 @@ public class MyModel extends Observable implements Model{
 		else 
 			MazeToSolution =  new HashMap<>();
 	}
+	
+	public void loadProperties(){
+		this.properties=new Properties("lib/properties.xml");
+	}
+	
 	
 	/**
 	 * <h2>setPresenter</h2>
@@ -148,8 +156,13 @@ public class MyModel extends Observable implements Model{
 						{
 							throw new IOException("maze with same name already exist");
 						}
-						Maze3dGenerator mg=new MyMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
-						Maze3d maze=mg.generate(mg.getDIMENSION(), mg.getWIDTH(), mg.getLENGTH());
+						Maze3dGenerator mg = null;
+						if(properties.getGenerateAlgorithm().contains("mymaze")){
+							 mg=new MyMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
+						}else if(properties.getGenerateAlgorithm().contains("simplemaze")){
+							 mg=new SimpleMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
+						}
+							Maze3d maze=mg.generate(mg.getDIMENSION(), mg.getWIDTH(), mg.getLENGTH());
 							AllMazes.put(param[3],maze);
 							//	Thread.sleep(20000);	//for debugging only, 20 sec sleep
 							//presenter.update("maze "+param[3]+" is ready"); ------MVC------
@@ -440,6 +453,7 @@ public class MyModel extends Observable implements Model{
 										else if(param.length==6){
 											setChanged();
 											notifyObservers(sol);
+											return sol;
 										}
 										//presenter.update("solution for "+param[1]+" is ready");------MVC------
 										setChanged();
@@ -467,6 +481,7 @@ public class MyModel extends Observable implements Model{
 										else if(param.length==6){
 											setChanged();
 											notifyObservers(sol);
+											return sol;
 										}
 										//presenter.update("solution for "+param[1]+" is ready");------MVC------
 										setChanged();
@@ -576,7 +591,19 @@ public class MyModel extends Observable implements Model{
 		notifyObservers("all tasks have been completed, Good Bye");
 		
 	}
-	
 
+
+public Properties getProperties() {
+	return properties;
+}
+
+
+public void setProperties(String path) {
+	this.properties = new Properties(path);
+	setChanged();
+	notifyObservers(this.properties);
+}
+
+	
 
 }

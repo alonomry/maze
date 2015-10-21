@@ -24,10 +24,12 @@ import org.eclipse.swt.widgets.Text;
 
 import CliDisplays.DisplayType;
 import CliDisplays.SolDisplay;
+import CliDisplays.StringDisplay;
 import algorithms.mazeGenerators.Maze3d;
 import algorithms.mazeGenerators.Position;
 import algorithms.search.Solution;
 import presenter.Command;
+import presenter.Properties;
 
 
 
@@ -37,9 +39,11 @@ public class Gui extends Observable implements View {
 	HashMap<String,Listener> buttons= new HashMap<>();
 	KeyListener CanvasKeyListener;
 	MazeWindow mazewidow;
-	String fileName;
+	String fileName, SolvingAlgorithm;
 	Shell shell;
+	
 
+	
 	
 	public Gui(String title, int width, int height) {
 		this.mazewidow=new MazeWindow(title, width, height);
@@ -149,7 +153,7 @@ public class Gui extends Observable implements View {
 					@Override
 					public void widgetSelected(SelectionEvent arg0) {
 						if(CharAndEnterIsEqual()){
-							String[] line={"solve",T.getText(),"Astar-air"};
+							String[] line={"solve",T.getText(),SolvingAlgorithm};
 							Command command = hashCommand.get("solve");
 							command.setStringCommand(line);
 							setChanged();
@@ -157,7 +161,7 @@ public class Gui extends Observable implements View {
 							sol.close();
 						}
 						else{
-						String[] line={"solve",T.getText(),"Astar-air",Integer.toString(((Maze3D)(mazewidow.maze)).getCharacterY()),
+						String[] line={"solve",T.getText(),SolvingAlgorithm,Integer.toString(((Maze3D)(mazewidow.maze)).getCharacterY()),
 								Integer.toString(((Maze3D)(mazewidow.maze)).getCharacterZ()),
 								Integer.toString(((Maze3D)(mazewidow.maze)).getCharacterX())};
 						Command command = hashCommand.get("solve");
@@ -206,6 +210,8 @@ public class Gui extends Observable implements View {
 				String[] filterExt = { "*.xml" };
 				fd.setFilterExtensions(filterExt);
 				fileName= fd.open();
+				setChanged();
+				notifyObservers(fileName);
 				
 			}
 		});
@@ -318,6 +324,17 @@ public class Gui extends Observable implements View {
 								mazewidow.WalkToExit((Solution<Position>)obj);
 							
 				break;
+			case "presenter.Properties":
+				this.setSolvingAlgorithm(((Properties)obj).getSolvingAlgorithm());	
+				Display.getDefault().asyncExec(new Runnable() {
+					public void run() {
+						MessageBox messageBox = new MessageBox(shell,  SWT.ICON_INFORMATION| SWT.OK);
+						messageBox.setMessage("Properties Sucsessfuly Loaded");
+						messageBox.setText("load complete");	
+						messageBox.open();	
+					}
+				});
+				break;
 			default:
 				break;
 				
@@ -334,11 +351,12 @@ public class Gui extends Observable implements View {
 	}
 	
 
-	@Override
-	public void start() {
-		mazewidow.run();
-		
+	
+	
+	public void setSolvingAlgorithm(String solvingAlgorithm) {
+		SolvingAlgorithm = solvingAlgorithm;
 	}
+
 	
 	public boolean CharAndEnterIsEqual(){
 		if(((Maze3D)(mazewidow.maze)).getCharacterX()==((Maze3D)(mazewidow.maze)).getEnterX()&&
@@ -349,7 +367,11 @@ public class Gui extends Observable implements View {
 		return false;	
 	}
 	
-	
+	@Override
+	public void start() {
+		mazewidow.run();
+		
+	}
 	
 }
 		

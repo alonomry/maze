@@ -14,6 +14,7 @@ import algorithms.mazeGenerators.Maze3d;
 import algorithms.mazeGenerators.Position;
 import algorithms.search.Solution;
 import model.Model;
+import model.MyModel;
 import view.*;
 
 // TODO: Auto-generated Javadoc
@@ -43,7 +44,6 @@ public class MyPresenter implements Presenter, Observer{
 		this.view = v;
 		this.hashCommand = new HashMap<>();
 		InitCommands();
-		Properties P=new Properties();
 	}
 	
 	/**
@@ -129,6 +129,10 @@ public class MyPresenter implements Presenter, Observer{
 			case "algorithms.search.Solution":
 				view.display(arg,new SolDisplay());			
 				break;
+			case "presenter.Properties":
+				view.display(arg,new StringDisplay());			
+				break;	
+				
 			}
 		}
 		if (o == view){
@@ -137,6 +141,11 @@ public class MyPresenter implements Presenter, Observer{
 			case "Command":
 				((Command)arg).doCommand();
 				break;
+			case "Serializable":
+				if(arg.getClass().getCanonicalName()=="java.lang.String")
+				model.setProperties((String)arg);
+				break;
+				
 			default:
 				break;
 			}

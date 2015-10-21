@@ -1,7 +1,6 @@
 package view;
 
 import java.util.HashMap;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.eclipse.swt.SWT;
@@ -34,9 +33,10 @@ public class MazeWindow extends BasicWindow {//implements View {
 	}
 
 	public void WalkToExit(Solution<Position> sol){
-	for(int i= sol.getSolution().size()-1;i>=0;i--)
+	for(int i= sol.getSolution().size()-1;i>=0;i--)//the size of the solution
 	{								
 		maze.setCharacterPosition(sol.getSolution().get(i).getState().getDim(), sol.getSolution().get(i).getState().getWid(), sol.getSolution().get(i).getState().getLen());
+		//set the character position every step in the solution
 		try {
 			Thread.sleep((long) (0.3 * 1000));
 		} catch (InterruptedException e) {
