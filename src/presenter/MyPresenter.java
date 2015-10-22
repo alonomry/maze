@@ -14,7 +14,6 @@ import algorithms.mazeGenerators.Maze3d;
 import algorithms.mazeGenerators.Position;
 import algorithms.search.Solution;
 import model.Model;
-import model.MyModel;
 import view.*;
 
 // TODO: Auto-generated Javadoc
@@ -34,7 +33,7 @@ public class MyPresenter implements Presenter, Observer{
 	HashMap<Maze3d,Solution<Position>> caching;
 	
 	/**
-	 * Instantiates a new MyController
+	 * Instantiates a new MyController.
 	 *
 	 * @param m the model
 	 * @param v the View
@@ -142,10 +141,13 @@ public class MyPresenter implements Presenter, Observer{
 				((Command)arg).doCommand();
 				break;
 			case "Serializable":
-				if(arg.getClass().getCanonicalName()=="java.lang.String")
-				model.setProperties((String)arg);
-				break;
-				
+				type = arg.getClass().getSimpleName();
+				if (arg.equals("checkDimention")){
+					view.display(arg, new StringDisplay());
+				}
+			//	if(arg.getClass().getCanonicalName()=="java.lang.String")
+			//	model.setProperties((String)arg);
+				break;		
 			default:
 				break;
 			}
@@ -380,9 +382,8 @@ public class MyPresenter implements Presenter, Observer{
 		String[] param;
 		
 		@Override
-		public void doCommand() {
+		public void doCommand(){
 			model.exitCommand();
-			
 		}
 
 		@Override

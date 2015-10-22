@@ -5,18 +5,19 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 
+import algorithms.mazeGenerators.Maze3d;
+import algorithms.mazeGenerators.Position;
+
 public class Maze3D extends MazeDisplayer {
 
-	public int characterX=0;
-	public int characterY=2;
-	public int characterZ=0;
-	public int exitX=0;
-	public int exitY=0;
-	public int exitZ=0;
-	public int enterX=0;
-	public int enterY=0;
-	public int enterZ=0;
-
+//	public int characterX=0;
+//	public int characterY=2;
+//	public int characterZ=0;
+//	public int exitX=0;
+//	public int exitY=0;
+//	public int exitZ=0;
+	Maze3d currentMaze;
+	public Position character = new Position(0,3,8);
 	
 	
 	private void paintCube(double[] p,double h,PaintEvent e){
@@ -70,7 +71,7 @@ public class Maze3D extends MazeDisplayer {
 				          if(mazeData[i][j]!=0)
 				        	  paintCube(dpoints, cheight,e);
 				          
-				          if(i==characterZ && j==characterX){
+				          if(i==character.getWid() && j==character.getLen()){
 							   e.gc.setBackground(new Color(null,200,0,0));
 							   e.gc.fillOval((int)Math.round(dpoints[0]), (int)Math.round(dpoints[1]-cheight/2), (int)Math.round((w0+w1)/2), (int)Math.round(h));
 							   e.gc.setBackground(new Color(null,255,0,0));
@@ -84,17 +85,54 @@ public class Maze3D extends MazeDisplayer {
 		});
 	}
 	
-	private void moveCharacter(int x,int z){
-		if(x>=0 && x<mazeData[0].length && z>=0 && z<mazeData.length && mazeData[z][x]==0){
-			characterX=x;
-			characterZ=z;
-			getDisplay().syncExec(new Runnable() {
-				
-				@Override
-				public void run() {
-					redraw();
-				}
-			});
+	private void moveCharacter(int dim,int wid,int len){
+		if((wid>=0 && wid< currentMaze.getWIDTH()) && (len>=0 && len<currentMaze.getLENGTH())){
+			if  (currentMaze.maze3d[dim][wid][len] == 0){
+				character.setDim(dim);
+				character.setWid(wid);
+				character.setLen(len);
+				getDisplay().syncExec(new Runnable() {	
+					@Override
+					public void run() {
+						redraw();
+					}
+				});
+			}	
+		}
+	}
+
+	
+	/* (non-Javadoc)
+	 * @see view.MazeDisplayer#moveUp()
+	 */
+	@Override
+	public void moveUp() {
+		if ((character.getDim()+1) < currentMaze.getDIMENSION()){
+			int y=character.getDim();
+			int x=character.getLen();
+			int z=character.getWid();
+			if (currentMaze.maze3d[y+1][z][x] == 0){
+				mazeData = currentMaze.getCrossSectionByY(y+1);
+				character.setDim(y+1);
+				redraw();
+			}
+		}
+		
+	}
+	/* (non-Javadoc)
+	 * @see view.MazeDisplayer#moveDown()
+	 */
+	@Override
+	public void moveDown() {
+		if ((character.getDim()-1) >= 0){
+			int y=character.getDim();
+			int x=character.getLen();
+			int z=character.getWid();
+			if (currentMaze.maze3d[y-1][z][x] == 0){
+				mazeData = currentMaze.getCrossSectionByY(y-1);
+				character.setDim(y-1);
+				redraw();
+			}
 		}
 	}
 	
@@ -102,83 +140,72 @@ public class Maze3D extends MazeDisplayer {
 	 * @see view.MazeDisplayer#moveUp()
 	 */
 	@Override
-	public void moveUp() {
-		int x=characterX;
-		int z=characterZ;
-		
+	public void moveForward() {
+		int y=character.getDim();
+		int z=character.getWid();
+		int x=character.getLen();
 		z=z-1;
-		moveCharacter(x, z);
+		moveCharacter(y,z,x);
 	}
 	/* (non-Javadoc)
 	 * @see view.MazeDisplayer#moveDown()
 	 */
 	@Override
-	public void moveDown() {
-		int x=characterX;
-		int z=characterZ;
-		z=z+1;
-		moveCharacter(x, z);
+	public void moveBackward() {
+		int y=character.getDim();
+		int z=character.getWid();
+		int x=character.getLen();
+		z=z+1;	
+		moveCharacter(y,z,x);
 	}
 	/* (non-Javadoc)
 	 * @see view.MazeDisplayer#moveLeft()
 	 */
 	@Override
 	public void moveLeft() {
-		int x=characterX;
-		int z=characterZ;
+		int y=character.getDim();
+		int z=character.getWid();
+		int x=character.getLen();
 		x=x-1;
-		moveCharacter(x, z);
+		moveCharacter(y,z,x);
 	}
 	/* (non-Javadoc)
 	 * @see view.MazeDisplayer#moveRight()
 	 */
 	@Override
 	public void moveRight() {
-		int x=characterX;
-		int z=characterZ;
+		int y=character.getDim();
+		int z=character.getWid();
+		int x=character.getLen();
 		x=x+1;
-		moveCharacter(x, z);
-	}
-	
-	@Override
-	public void setCharacterPosition(int dim, int wid,int len) {
-		characterX=len;
-		characterY=dim;
-		characterZ=wid;
-		moveCharacter(len,wid);
-	}
-	@Override
-	public void setExit(int dim, int wid, int len) {
-		this.exitY=dim;
-		this.exitX=len;
-		this.exitZ=wid;
-	}
-	public int getCharacterX() {
-		return characterX;
-	}
-	public int getCharacterY() {
-		return characterY;
-	}
-	public int getCharacterZ() {
-		return characterZ;
-	}
-	
-	public int getEnterX() {
-		return enterX;
-	}
-	public int getEnterY() {
-		return enterY;
-	}
-	public int getEnterZ() {
-		return enterZ;
-	}
-	@Override
-	public void setEnter(int dim, int wid, int len) {
-		this.enterY=dim;
-		this.enterX=len;
-		this.enterZ=wid;		
+		moveCharacter(y,z,x);
 	}
 
+
+	@Override
+	public void setCharacterPosition(int dim, int wid,int len) {//
+		character.setDim(dim);
+		character.setWid(wid);
+		character.setLen(len);
+		mazeData = currentMaze.getCrossSectionByY(dim);
+		moveCharacter(dim, wid, len);
+	}
+	public Position getCharacter() {
+		return character;
+	}
 	
+	@Override
+	public void setCurrentMaze(Maze3d m) {
+		currentMaze = m;
+		mazeData = currentMaze.getCrossSectionByY(currentMaze.getEnter().getDim());
+		setCharacterPosition(currentMaze.getEnter().getDim(), currentMaze.getEnter().getWid(), currentMaze.getEnter().getLen());
+		redraw();
+	}
+	@Override
+	public Maze3d getCurrentMaze() {
+		return currentMaze;
+	}
+
+
 	
 }

@@ -5,6 +5,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -14,6 +15,7 @@ import org.eclipse.swt.widgets.MenuItem;
 
 import algorithms.mazeGenerators.Position;
 import algorithms.search.Solution;
+import org.eclipse.swt.widgets.Label;
 import presenter.Command;
 
 public class MazeWindow extends BasicWindow {//implements View {
@@ -26,6 +28,10 @@ public class MazeWindow extends BasicWindow {//implements View {
 	KeyListener CanvasKeyListener;
 	Timer timer;
 	TimerTask task;
+	Label upArrow;
+	Label downArrow;
+	Image up;
+	Image down;
 	
 	
 	public MazeWindow(String title, int width, int height) {
@@ -34,8 +40,9 @@ public class MazeWindow extends BasicWindow {//implements View {
 
 	public void WalkToExit(Solution<Position> sol){
 	for(int i= sol.getSolution().size()-1;i>=0;i--)//the size of the solution
-	{								
+	{		
 		maze.setCharacterPosition(sol.getSolution().get(i).getState().getDim(), sol.getSolution().get(i).getState().getWid(), sol.getSolution().get(i).getState().getLen());
+		
 		//set the character position every step in the solution
 		try {
 			Thread.sleep((long) (0.3 * 1000));
@@ -45,6 +52,23 @@ public class MazeWindow extends BasicWindow {//implements View {
 		}	
 	}
 	}
+	
+	
+	public void WalkByHint(Solution<Position> sol){
+		for(int i= sol.getSolution().size()-1;i>=sol.getSolution().size()-4;i--)//the size of the solution
+		{		
+			maze.setCharacterPosition(sol.getSolution().get(i).getState().getDim(), sol.getSolution().get(i).getState().getWid(), sol.getSolution().get(i).getState().getLen());
+			
+			//set the character position every step in the solution
+			try {
+				Thread.sleep((long) (0.3 * 1000));
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+		}
+		}
+	
 	
 	@Override
 	void initWidgets() {
@@ -73,7 +97,7 @@ public class MazeWindow extends BasicWindow {//implements View {
 		//******canvas*******
 		//MazeDisplayer maze=new Maze2D(shell, SWT.BORDER);		
 		maze=new Maze3D(shell, SWT.BORDER);
-		maze.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,true,1,3));
+		maze.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,true,1,5));
 		
 		//*******end of canvas*******
 		
@@ -94,8 +118,25 @@ public class MazeWindow extends BasicWindow {//implements View {
 		SolveButton.setLayoutData(new GridData(SWT.FILL, SWT.None, false, false, 1, 1));
 		SolveButton.addListener(SWT.Selection, buttons.get("solve"));
 		
-		//*****end of Solve button******
-		
+		//*****end of Solve button****** 
+
+		//*****Status Arrows*******
+		//___UP ARROW_____
+			upArrow = new Label(shell, SWT.BORDER_SOLID);
+			up = new Image(display, "lib/img/up.png");
+			upArrow.setLayoutData(new GridData(SWT.FILL, SWT.None, false, false, 1, 1));
+			upArrow.setImage(up);
+			upArrow.setVisible(false);
+			
+			//___DOWN ARROW_____
+			downArrow = new Label(shell, SWT.BORDER_SOLID);
+			down = new Image(display, "lib/img/down.png");
+			downArrow.setLayoutData(new GridData(SWT.FILL, SWT.None, false, false, 1, 1));
+			downArrow.setImage(down);
+			downArrow.setVisible(false);
+
+		//*****End of Status Arrow****
+	
 
 		//**********menu settings************
 		//***********************************
@@ -133,8 +174,6 @@ public class MazeWindow extends BasicWindow {//implements View {
 	    shell.setMenuBar(menuBar);
 				
 	}
-
-	
 	
 	public void setButtons(HashMap<String, Listener> buttons) {
 		this.buttons = buttons;
@@ -142,6 +181,41 @@ public class MazeWindow extends BasicWindow {//implements View {
 
 	public void setCanvasKeyListener(KeyListener canvasKeyListener) {
 		CanvasKeyListener = canvasKeyListener;
+	}
+
+	public void arrowDimention() {
+		Image upGrey = new Image(display, up,SWT.IMAGE_GRAY);
+		Image downGrey = new Image(display, down,SWT.IMAGE_GRAY);
+		if (maze.getCharacter().getDim() + 1 < maze.getCurrentMaze().getDIMENSION()){
+			if (maze.getCurrentMaze().maze3d[maze.getCharacter().getDim() + 1][maze.getCharacter().getWid()][maze.getCharacter().getLen()] == 0){
+				upArrow.setVisible(true);
+				upArrow.setImage(up);
+			}
+			else {
+				upArrow.setVisible(true);
+				upArrow.setImage(upGrey);
+			}
+		}
+		else {
+			upArrow.setVisible(true);
+			upArrow.setImage(upGrey);
+		}
+		
+		if (maze.getCharacter().getDim() - 1 >= 0){
+			if (maze.getCurrentMaze().maze3d[maze.getCharacter().getDim() - 1][maze.getCharacter().getWid()][maze.getCharacter().getLen()] == 0){
+				downArrow.setVisible(true);
+				downArrow.setImage(down);
+			}
+			else{
+				downArrow.setVisible(true);
+				downArrow.setImage(downGrey); 
+			}
+		}
+		else {
+			downArrow.setVisible(true);
+			downArrow.setImage(downGrey); 
+		}
+			
 	}
 
 

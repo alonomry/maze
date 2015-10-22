@@ -417,7 +417,7 @@ public class MyModel extends Observable implements Model{
 	@Override
 	public void SolveCommand(String[] param){
 		threadpool.submit(new Callable<Solution<Position>>() {
-		//		Future<Solution<Position>> future = 	
+	
 		@Override
 		public Solution<Position> call() throws Exception {
 			Solution<Position> sol=new Solution<Position>();
@@ -425,18 +425,18 @@ public class MyModel extends Observable implements Model{
 						Maze3d m1 = AllMazes.get(param[1]);
 						Maze3d m=new Maze3d(AllMazes.get(param[1]).toByteArray());
 						if(MazeToSolution.containsKey(m1)){
-							
-						OriginalEnter=m.getEnter();
-						if(param.length==6)
-						{
-						Position NewEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
-						m.setEnter(NewEnter);
-						}
-						else{
-						setChanged();
-						notifyObservers("solution for "+param[1]+" is already exist");
-						return sol;
-						}
+								
+							OriginalEnter=m.getEnter();
+							if(param.length==6)
+							{
+								Position NewEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
+								m.setEnter(NewEnter);
+							}
+							else{
+								setChanged();
+								notifyObservers("solution for "+param[1]+" is already exist");
+								return sol;
+							}
 						
 						}
 						if(param.length==3||param.length==6)
@@ -506,13 +506,13 @@ public class MyModel extends Observable implements Model{
 				
 			}
 		});
-//		try {
-//			future.get();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		} catch (ExecutionException e) {
-//			e.printStackTrace();
-//		}
+		/*try {
+			future.get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}*/
 	}
 	
 
