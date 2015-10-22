@@ -506,7 +506,7 @@ public class MyModel extends Observable implements Model{
 				
 			}
 		});
-		/*try {
+		/*try{
 			future.get();
 		} catch (InterruptedException e) {
 			e.printStackTrace();

@@ -304,9 +304,15 @@ public class Gui extends Observable implements View {
 				break;	
 			}
 			case "algorithms.search.Solution":
-
-								mazewindow.WalkToExit((Solution<Position>)obj);
-								checkDimention();
+					if(LastButtonPressed.equals("solve")){
+						mazewindow.WalkToExit((Solution<Position>)obj);
+						checkDimention();
+					}
+					else if(LastButtonPressed.equals("hint")){
+						mazewindow.WalkByHint((Solution<Position>)obj);
+						checkDimention();
+					}
+								
 				break;
 			case "presenter.Properties":
 				this.setSolvingAlgorithm(((Properties)obj).getSolvingAlgorithm());	
