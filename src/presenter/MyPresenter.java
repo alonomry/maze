@@ -145,9 +145,13 @@ public class MyPresenter implements Presenter, Observer{
 				if (arg.equals("checkDimention")){
 					view.display(arg, new StringDisplay());
 				}
-			//	if(arg.getClass().getCanonicalName()=="java.lang.String")
-			//	model.setProperties((String)arg);
-				break;		
+				if (arg.equals("setButtonOff")){
+					view.display(arg, new StringDisplay());
+				}
+				if (((String)arg).contains(".xml")){
+					model.setProperties((String)arg);
+				}
+				break;
 			default:
 				break;
 			}

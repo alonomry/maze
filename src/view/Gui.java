@@ -2,6 +2,7 @@ package view;
 
 import java.util.HashMap;
 import java.util.Observable;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -33,10 +34,11 @@ public class Gui extends Observable implements View {
 	HashMap<String,Listener> buttons= new HashMap<>();
 	KeyListener CanvasKeyListener;
 	MazeWindow mazewindow;
-	String fileName, SolvingAlgorithm;
+	String fileName=null, SolvingAlgorithm;
 	Shell shell;
 	String LastButtonPressed;
 	String CurrentMazeName;
+	boolean keyListenerActivator = false;
 	
 	public Gui(String title, int width, int height) {
 		this.mazewindow=new MazeWindow(title, width, height);
@@ -96,17 +98,7 @@ public class Gui extends Observable implements View {
 						command.setStringCommand(line);
 						setChanged();
 						notifyObservers(command);
-						
-						String[] line1={"display",T.getText()};
-						Command command1 = hashCommand.get("display");
-						command1.setStringCommand(line1);
-						setChanged();
-						notifyObservers(command1);	
 						sh.close();
-						
-						
-						
-						//setbuttonavalible //HintButton.setEnabled(false);
 				
 			}
 
@@ -119,18 +111,16 @@ public class Gui extends Observable implements View {
 				sh.open();
 		}
 		});
-				
-		
-		
-		
-				
-				
+						
 		buttons.put("solve",new Listener() {
 			
 			@Override
 			public void handleEvent(Event arg0) {
 				LastButtonPressed="solve";
+				keyListenerActivator = false;
 						if(CharAndEnterIsEqual()){
+							setChanged();
+							notifyObservers("setButtonOff");
 							String[] line={"solve",CurrentMazeName,SolvingAlgorithm};
 							Command command = hashCommand.get("solve");
 							command.setStringCommand(line);
@@ -138,13 +128,15 @@ public class Gui extends Observable implements View {
 							notifyObservers(command);
 						}
 						else{
+							setChanged();
+							notifyObservers("setButtonOff");
 							String[] line={"solve",CurrentMazeName,SolvingAlgorithm,Integer.toString(mazewindow.maze.getCharacter().getDim()),	
-							Integer.toString(mazewindow.maze.getCharacter().getWid()),
-								Integer.toString(mazewindow.maze.getCharacter().getLen())};
-						Command command = hashCommand.get("solve");
-						command.setStringCommand(line);
-						setChanged();
-						notifyObservers(command);
+																					Integer.toString(mazewindow.maze.getCharacter().getWid()),
+																					Integer.toString(mazewindow.maze.getCharacter().getLen())};
+							Command command = hashCommand.get("solve");
+							command.setStringCommand(line);
+							setChanged();
+							notifyObservers(command);
 						}
 			}	
 		});
@@ -156,23 +148,23 @@ public class Gui extends Observable implements View {
 			public void handleEvent(Event arg0) {
 				LastButtonPressed="hint";
 				if(CharAndEnterIsEqual()){
-					String[] line={"solve",CurrentMazeName,SolvingAlgorithm};
-					Command command = hashCommand.get("solve");
-					command.setStringCommand(line);
-					setChanged();
-					notifyObservers(command);
+						String[] line={"solve",CurrentMazeName,SolvingAlgorithm};
+						Command command = hashCommand.get("solve");
+						command.setStringCommand(line);
+						setChanged();
+						notifyObservers(command);
 				}
 				else{
 					String[] line={"solve",CurrentMazeName,SolvingAlgorithm,Integer.toString(mazewindow.maze.getCharacter().getDim()),	
-					Integer.toString(mazewindow.maze.getCharacter().getWid()),
-						Integer.toString(mazewindow.maze.getCharacter().getLen())};
-				Command command = hashCommand.get("solve");
-				command.setStringCommand(line);
-				setChanged();
-				notifyObservers(command);
+																				Integer.toString(mazewindow.maze.getCharacter().getWid()),
+																				Integer.toString(mazewindow.maze.getCharacter().getLen())};
+						Command command = hashCommand.get("solve");
+						command.setStringCommand(line);
+						setChanged();
+						notifyObservers(command);
 				}
-				
 			}
+
 		});
 		
 		
@@ -187,8 +179,10 @@ public class Gui extends Observable implements View {
 				String[] filterExt = { "*.xml" };
 				fd.setFilterExtensions(filterExt);
 				fileName= fd.open();
-				setChanged();
-				notifyObservers(fileName);
+				if(fileName!=null){
+					setChanged();
+					notifyObservers(fileName);
+				}
 				
 			}
 		});
@@ -222,8 +216,7 @@ public class Gui extends Observable implements View {
 			}
 		});
 		
-		
-		CanvasKeyListener=new KeyListener() {
+		CanvasKeyListener=new KeyListener(){
 			
 			@Override
 			public void keyReleased(KeyEvent arg0) {
@@ -232,62 +225,96 @@ public class Gui extends Observable implements View {
 			
 			@Override
 			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == SWT.ARROW_DOWN ) {
-						mazewindow.maze.moveBackward();
-						setChanged();
-						notifyObservers("checkDimention");
-			    } else if (e.keyCode == SWT.ARROW_UP ) {
-				    	mazewindow.maze.moveForward();
-						setChanged();
-						notifyObservers("checkDimention");
-			    } else if (e.keyCode == SWT.ARROW_LEFT ) {
-				    	mazewindow.maze.moveLeft();
-						setChanged();
-						notifyObservers("checkDimention");
-			    } else if (e.keyCode == SWT.ARROW_RIGHT ) {
-				    	mazewindow.maze.moveRight();
-						setChanged();
-						notifyObservers("checkDimention");
-				} else if (e.keyCode == SWT.SHIFT){
-						mazewindow.maze.moveUp();
-						setChanged();
-						notifyObservers("checkDimention");
-				} else if (e.keyCode == 0x2f){// The key "/" to go down
-						mazewindow.maze.moveDown();
-						setChanged();
-						notifyObservers("checkDimention");
+				if (keyListenerActivator){
+					if (e.keyCode == SWT.ARROW_DOWN ) {
+							mazewindow.maze.moveBackward();
+							setChanged();
+							notifyObservers("checkDimention");
+							if (CharAndExitIsEqual()){
+								setButtonOff();
+								doneMessageBox("Congratulation You Solved The Maze :)");
+							}
+				    } else if (e.keyCode == SWT.ARROW_UP ) {
+					    	mazewindow.maze.moveForward();
+							setChanged();
+							notifyObservers("checkDimention");
+							if (CharAndExitIsEqual()){
+								setButtonOff();
+								doneMessageBox("Congratulation You Solved The Maze :)");
+							}
+				    } else if (e.keyCode == SWT.ARROW_LEFT ) {
+					    	mazewindow.maze.moveLeft();
+							setChanged();
+							notifyObservers("checkDimention");
+							if (CharAndExitIsEqual()){
+								setButtonOff();
+								doneMessageBox("Congratulation You Solved The Maze :)");
+							}
+				    } else if (e.keyCode == SWT.ARROW_RIGHT ) {
+					    	mazewindow.maze.moveRight();
+							setChanged();
+							notifyObservers("checkDimention");
+							if (CharAndExitIsEqual()){
+								setButtonOff();
+								doneMessageBox("Congratulation You Solved The Maze :)");
+							}
+					} else if (e.keyCode == SWT.SHIFT){
+							mazewindow.maze.moveUp();
+							setChanged();
+							notifyObservers("checkDimention");
+							if (CharAndExitIsEqual()){
+								setButtonOff();
+								doneMessageBox("Congratulation You Solved The Maze :)");
+							}
+					} else if (e.keyCode == 0x2f){// The key "/" to go down
+							mazewindow.maze.moveDown();
+							setChanged();
+							notifyObservers("checkDimention");
+							if (CharAndExitIsEqual()){
+								setButtonOff();
+								doneMessageBox("Congratulation You Solved The Maze :)");
+							}
+					}
 				}
 			}
-		};	
-		
-		
-	}
+			};	
+		}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void display(Object obj, DisplayType d) {
+		
 		String type;
 			type = obj.getClass().getCanonicalName();
 			switch (type) {
 				case "algorithms.mazeGenerators.Maze3d":
 					mazewindow.maze.setCurrentMaze((Maze3d)obj);
+					keyListenerActivator =true;
+					setButtonOn();
 					checkDimention();
 					this.mazewindow.maze.setCharacterPosition(((Maze3d)obj).getEnter().getDim(),((Maze3d)obj).getEnter().getWid(),((Maze3d)obj).getEnter().getLen());
-
-				break;
+					break;
 				case "java.lang.String":
-				{
 					if (((String)obj).contains("solution"))
 					{
-						String[] name = ((String)obj).split(" ");
-						String[] line={"display","solution",name[2] };
+						String[] line={"display","solution",CurrentMazeName };
 						Command command = hashCommand.get("display solution");
 						command.setStringCommand(line);
 						setChanged();
 						notifyObservers(command);
+						break;
 					}
-					if (((String)obj).contains("Valid")||((String)obj).contains("found"))
-					{
+					
+					if (((String)obj).equals("maze "+CurrentMazeName+" is ready")) {
+						String[] line1={"display",CurrentMazeName};
+						Command command1 = hashCommand.get("display");
+						command1.setStringCommand(line1);
+						setChanged();
+						notifyObservers(command1);	
+						break;
+					}
+					
+					if (((String)obj).contains("Valid")||((String)obj).contains("found")||((String)obj).contains("exist")){
 						Display.getDefault().asyncExec(new Runnable() {
 							public void run() {
 								MessageBox messageBox = new MessageBox(shell,  SWT.ICON_WARNING| SWT.OK);
@@ -296,21 +323,34 @@ public class Gui extends Observable implements View {
 								messageBox.open();	
 							}
 						});
-						
+						break;
 					}
 					if (((String)obj).equals("checkDimention")){
 						checkDimention();
+						break;
 					}
+					if (((String)obj).equals("setButtonOff")){
+						setButtonOff();
+						break;
+					}
+					if (((String)obj).equals("setButtonOn")){
+						setButtonOff();
+						break;
+					}
+					
 				break;	
-			}
 			case "algorithms.search.Solution":
 					if(LastButtonPressed.equals("solve")){
 						mazewindow.WalkToExit((Solution<Position>)obj);
-						checkDimention();
+						break;
 					}
 					else if(LastButtonPressed.equals("hint")){
 						mazewindow.WalkByHint((Solution<Position>)obj);
-						checkDimention();
+						if (CharAndExitIsEqual()){
+							setButtonOff();
+							doneMessageBox("you reach the exit point");
+						}
+						break;
 					}
 								
 				break;
@@ -329,11 +369,18 @@ public class Gui extends Observable implements View {
 				break;
 				
 			}
-			
-		
 	}
 	
-	
+	public void doneMessageBox(String s){
+		Display.getDefault().asyncExec(new Runnable() {
+			public void run() {
+				MessageBox messageBox = new MessageBox(shell,  SWT.ICON_WARNING| SWT.OK);
+				messageBox.setText("Maze Is Solved");
+				messageBox.setMessage(s);	
+				messageBox.open();	
+			}
+		});
+	}
 	
 	public void setCommandLine(HashMap<String, Command> newhashCommand) {
 		this.hashCommand = new HashMap<>(newhashCommand);
@@ -351,9 +398,24 @@ public class Gui extends Observable implements View {
 		}
 		return false;	
 	}
+	
+	public boolean CharAndExitIsEqual(){
+		if(mazewindow.maze.getCharacter().equals(mazewindow.maze.getCurrentMaze().getExit())){
+			return true;
+		}
+		return false;	
+	}
 
 	public void checkDimention(){
 		mazewindow.arrowDimention();
+	}
+	
+	public void setButtonOff(){
+		mazewindow.setButtonOff();
+	}
+	
+	public void setButtonOn(){
+		mazewindow.setButtonOn();
 	}
 	
 	@Override

@@ -1,5 +1,6 @@
 package view;
 
+
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -8,13 +9,12 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-
 import algorithms.mazeGenerators.Position;
 import algorithms.search.Solution;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Label;
 import presenter.Command;
 
@@ -32,42 +32,42 @@ public class MazeWindow extends BasicWindow {//implements View {
 	Label downArrow;
 	Image up;
 	Image down;
+	Button GenerateButton;
+	Button HintButton;
+	Button SolveButton;
+	boolean keyListenerActivator = false;
 	
-	
+
 	public MazeWindow(String title, int width, int height) {
 		super(title, width, height);
 	}
 
 	public void WalkToExit(Solution<Position> sol){
-	for(int i= sol.getSolution().size()-1;i>=0;i--)//the size of the solution
-	{		
-		maze.setCharacterPosition(sol.getSolution().get(i).getState().getDim(), sol.getSolution().get(i).getState().getWid(), sol.getSolution().get(i).getState().getLen());
-		
-		//set the character position every step in the solution
-		try {
-			Thread.sleep((long) (0.3 * 1000));
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
+		timer = new Timer();
+		task = new TimerTask() {
+		int i = sol.getSolution().size()-1;
+			@Override
+			public void run() {//set the character position every step in the solution
+				if(i>=0)
+				{
+					maze.setCharacterPosition(sol.getSolution().get(i).getState().getDim(), 
+											  sol.getSolution().get(i).getState().getWid(),
+											  sol.getSolution().get(i).getState().getLen());
+					
+					i--;
+				}
+			}
+		};
+		timer.scheduleAtFixedRate(task, 0, (long) (0.3 * 1000));
+		timer.purge();
 	}
-	}
-	
 	
 	public void WalkByHint(Solution<Position> sol){
-		for(int i= sol.getSolution().size()-1;i>=sol.getSolution().size()-4;i--)//the size of the solution
-		{		
-			maze.setCharacterPosition(sol.getSolution().get(i).getState().getDim(), sol.getSolution().get(i).getState().getWid(), sol.getSolution().get(i).getState().getLen());
-			
-			//set the character position every step in the solution
-			try {
-				Thread.sleep((long) (0.3 * 1000));
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}	
-		}
-		}
+
+					maze.setCharacterPosition(sol.getSolution().get(sol.getSolution().size()-2).getState().getDim(), 
+											  sol.getSolution().get(sol.getSolution().size()-2).getState().getWid(),
+											  sol.getSolution().get(sol.getSolution().size()-2).getState().getLen());			
+	}
 	
 	
 	@Override
@@ -85,11 +85,10 @@ public class MazeWindow extends BasicWindow {//implements View {
 		
 		//******Generate button*****
 		
-		Button GenerateButton=new Button(shell, SWT.PUSH);
+		GenerateButton=new Button(shell, SWT.PUSH);
 		GenerateButton.setText("Generate");
 		GenerateButton.setLayoutData(new GridData(SWT.FILL, SWT.None, false, false, 1, 1));
 		GenerateButton.addListener(SWT.Selection, buttons.get("generate"));
-		
 		
 		//********end of Generate button*******
 		
@@ -104,19 +103,22 @@ public class MazeWindow extends BasicWindow {//implements View {
 		
 		//******Hint button*****
 		
-		Button HintButton=new Button(shell, SWT.PUSH);
+		HintButton=new Button(shell, SWT.PUSH);
 		HintButton.setText("Hint");
 		HintButton.setLayoutData(new GridData(SWT.FILL, SWT.None, false, false, 1, 1));
 		HintButton.addListener(SWT.Selection, buttons.get("hint"));
+		HintButton.setEnabled(false);
+		
 		
 		//*****end of Hint button******
 		
 		//******Solve button**********
 		
-		Button SolveButton=new Button(shell, SWT.PUSH);
+		SolveButton=new Button(shell, SWT.PUSH);
 		SolveButton.setText("Solve");
 		SolveButton.setLayoutData(new GridData(SWT.FILL, SWT.None, false, false, 1, 1));
 		SolveButton.addListener(SWT.Selection, buttons.get("solve"));
+		SolveButton.setEnabled(false);
 		
 		//*****end of Solve button****** 
 
@@ -167,7 +169,7 @@ public class MazeWindow extends BasicWindow {//implements View {
 	    helpGetHelpItem.addListener(SWT.Selection, buttons.get("about"));
 	    
 	
-	//*********key listener***********	    
+	//*********key listener***********	 
 	    maze.addKeyListener(CanvasKeyListener);
 	//*********and of key listener***********   
 	
@@ -182,7 +184,34 @@ public class MazeWindow extends BasicWindow {//implements View {
 	public void setCanvasKeyListener(KeyListener canvasKeyListener) {
 		CanvasKeyListener = canvasKeyListener;
 	}
+	
+	public void setKeyListenerOn(){
+		keyListenerActivator = true;
+	}
+	
+	public void setKeyListenerOff(){
+		keyListenerActivator = false;
+	}
+	
+	public void setButtonOff(){
+		HintButton.setEnabled(false);
+		SolveButton.setEnabled(false);
+		
+		upArrow.setVisible(false);
+		downArrow.setVisible(false);	
+	}
+	
+	public void setButtonOn(){		
+		
+        HintButton.setEnabled(true);
+        SolveButton.setEnabled(true);
+		
+		upArrow.setVisible(true);
+		downArrow.setVisible(true);
 
+		
+	}
+	
 	public void arrowDimention() {
 		Image upGrey = new Image(display, up,SWT.IMAGE_GRAY);
 		Image downGrey = new Image(display, down,SWT.IMAGE_GRAY);

@@ -10,12 +10,7 @@ import algorithms.mazeGenerators.Position;
 
 public class Maze3D extends MazeDisplayer {
 
-//	public int characterX=0;
-//	public int characterY=2;
-//	public int characterZ=0;
-//	public int exitX=0;
-//	public int exitY=0;
-//	public int exitZ=0;
+	
 	Maze3d currentMaze;
 	public Position character = new Position(0,3,8);
 	
@@ -184,9 +179,6 @@ public class Maze3D extends MazeDisplayer {
 
 	@Override
 	public void setCharacterPosition(int dim, int wid,int len) {//
-		character.setDim(dim);
-		character.setWid(wid);
-		character.setLen(len);
 		mazeData = currentMaze.getCrossSectionByY(dim);
 		moveCharacter(dim, wid, len);
 	}
@@ -206,6 +198,4 @@ public class Maze3D extends MazeDisplayer {
 		return currentMaze;
 	}
 
-
-	
 }

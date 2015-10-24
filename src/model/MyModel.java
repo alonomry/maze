@@ -1,5 +1,7 @@
 package model;
 
+
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -9,13 +11,15 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Observable;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
 import algorithms.demo.Maze3dAdapter;
 import algorithms.io.MyCompressorOutputStream;
 import algorithms.io.MyDecompressorInputStream;
@@ -70,11 +74,10 @@ public class MyModel extends Observable implements Model{
 	
 	@SuppressWarnings("unchecked")
 	public void loadMazeToSolution (){
-		File file = new File("mazes.maz");
+		File file = new File("lib/mazes.zip");
 		if (file.exists()){
 			try {
-				ObjectInputStream in;
-				in = new ObjectInputStream(new FileInputStream("mazes.maz"));
+				ObjectInputStream in = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
 				try {
 					MazeToSolution = (HashMap<Maze3d, Solution<Position>>)in.readObject();
 				} catch (ClassNotFoundException e) {
@@ -89,7 +92,7 @@ public class MyModel extends Observable implements Model{
 			}
 		}
 		else 
-			MazeToSolution =  new HashMap<>();
+			MazeToSolution =  new HashMap<Maze3d,Solution<Position>>();
 	}
 	
 	public void loadProperties(){
@@ -119,14 +122,12 @@ public class MyModel extends Observable implements Model{
 		try {
 			if(param.length==1){
 				File f = new File(".");
-				//presenter.update(f.list());------MVC------
 				setChanged();
 				notifyObservers(f.list());
 			}
 			else if (param.length == 2){
 				File f = new File(param[1]);
 					if(f.exists()){
-						//presenter.update(f.list());------MVC------
 						setChanged();
 						notifyObservers(f.list());
 					}
@@ -146,34 +147,30 @@ public class MyModel extends Observable implements Model{
  */
 	@Override
 	public void generateCommand(String[] param) {
-		Future<Maze3d> future = threadpool.submit(new Callable<Maze3d>() {
-
+		Future<Maze3d> future =	threadpool.submit(new Callable<Maze3d>() {
 			@Override
 			public Maze3d call() throws Exception {
 				try {
 					if (param.length == 7){
+						Maze3dGenerator mg = null;
 						if(AllMazes.get(param[3])!=null)
 						{
 							throw new IOException("maze with same name already exist");
 						}
-						Maze3dGenerator mg = null;
-						if(properties.getGenerateAlgorithm().contains("mymaze")){
-							 mg=new MyMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
-						}else if(properties.getGenerateAlgorithm().contains("simplemaze")){
-							 mg=new SimpleMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
+						else if(properties.getGenerateAlgorithm().contains("mymaze")){
+							mg = new MyMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
 						}
-							Maze3d maze=mg.generate(mg.getDIMENSION(), mg.getWIDTH(), mg.getLENGTH());
+						else if(properties.getGenerateAlgorithm().contains("simplemaze")){
+							mg = new SimpleMaze3dGenerator(Integer.parseInt(param[4]), Integer.parseInt(param[5]), Integer.parseInt(param[6]));
+						}
+							Maze3d maze = mg.generate(mg.getDIMENSION(), mg.getWIDTH(), mg.getLENGTH());
 							AllMazes.put(param[3],maze);
 							//	Thread.sleep(20000);	//for debugging only, 20 sec sleep
-							//presenter.update("maze "+param[3]+" is ready"); ------MVC------
-							setChanged();
-							notifyObservers("maze "+param[3]+" is ready");
 							return maze;
 					}
 							else throw new IOException("Not a Valid Command");
 					
 				} catch (Exception e) {
-					//presenter.update(e.getMessage());------MVC------
 					setChanged();
 					notifyObservers(e.getMessage());
 					return null;
@@ -182,7 +179,12 @@ public class MyModel extends Observable implements Model{
 			}
 		});
 		try {
-			future.get();
+			if (future.get()!=null){
+				AllMazes.put(param[3],future.get());
+				setChanged();
+				notifyObservers("maze "+param[3]+" is ready");				
+			}
+
 		} catch (InterruptedException e) {
 				e.printStackTrace();
 			e.printStackTrace();
@@ -205,7 +207,6 @@ public class MyModel extends Observable implements Model{
 				if(AllMazes.get(param[1])!=null)
 				{
 				Maze3d maze = AllMazes.get(param[1]);
-				//presenter.update(maze);------MVC------
 				setChanged();
 				notifyObservers(maze);
 				}
@@ -213,7 +214,6 @@ public class MyModel extends Observable implements Model{
 			}
 			else throw new IOException("Not a Valid Command");
 		} catch (Exception e) {
-			//presenter.update(e.getMessage());------MVC------
 			setChanged();
 			notifyObservers(e.getMessage());
 			}
@@ -416,103 +416,96 @@ public class MyModel extends Observable implements Model{
 	
 	@Override
 	public void SolveCommand(String[] param){
-		threadpool.submit(new Callable<Solution<Position>>() {
-	
-		@Override
-		public Solution<Position> call() throws Exception {
-			Solution<Position> sol=new Solution<Position>();
-				try {
-						Maze3d m1 = AllMazes.get(param[1]);
-						Maze3d m=new Maze3d(AllMazes.get(param[1]).toByteArray());
-						if(MazeToSolution.containsKey(m1)){
-								
-							OriginalEnter=m.getEnter();
-							if(param.length==6)
-							{
-								Position NewEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
-								m.setEnter(NewEnter);
-							}
-							else{
-								setChanged();
-								notifyObservers("solution for "+param[1]+" is already exist");
-								return sol;
-							}
-						
-						}
-						if(param.length==3||param.length==6)
-						{
-							if(AllMazes.get(param[1])!=null)//get the array list for specific name
-							{
-								Maze3dAdapter MA=new Maze3dAdapter(m, 10);//cost 10
-								switch (param[2]) {
-									case "Astar-manhattan":
-										Searcher<Position> AstarsearcherManhattan=new Astar<Position>(new ManhattanDistance());
-										sol= AstarsearcherManhattan.search(MA);
-										if(param.length==3)
-											MazeToSolution.put(m1,sol);
-										else if(param.length==6){
-											setChanged();
-											notifyObservers(sol);
-											return sol;
-										}
-										//presenter.update("solution for "+param[1]+" is ready");------MVC------
-										setChanged();
-										notifyObservers("solution for "+param[1]+" is ready");
-										return sol;
-									case "Astar-air":
-										Searcher<Position> AstarsearcherAir=new Astar<Position>(new AirDistance());
-										sol= AstarsearcherAir.search(MA);
-										if(param.length==3)
-											MazeToSolution.put(m1,sol);
-										else if(param.length==6){
-											setChanged();
-											notifyObservers(sol);
-											return sol;
-										}
-										//presenter.update("solution for "+param[1]+" is ready");------MVC------
-										setChanged();
-										notifyObservers("solution for "+param[1]+" is ready");
-										return sol;
-									case "Bfs":
-										Searcher<Position> searcher=new Bfs<>();
-										sol= searcher.search(MA);
-										if(param.length==3)
-											MazeToSolution.put(m1, sol);
-										else if(param.length==6){
-											setChanged();
-											notifyObservers(sol);
-											return sol;
-										}
-										//presenter.update("solution for "+param[1]+" is ready");------MVC------
-										setChanged();
-										notifyObservers("solution for "+param[1]+" is ready");
-										return sol;
-			
-									default:
-										throw new IOException("not a valid algorithm");
-									
-									}
-							}
-							else throw new IOException("maze not found");
-					}
-					else throw new IOException("Not a Valid command");
-	
-				} catch (Exception e) {
-					//presenter.update(e.getMessage());------MVC------
-					setChanged();
-					notifyObservers(e.getMessage());
-					return null;
-				}
+		
+		
+		Future<Solution<Position>> future = threadpool.submit(new Callable<Solution<Position>>(){
+		
+			@Override
+			public Solution<Position> call() throws Exception {
 				
-			}
+				Solution<Position> sol=new Solution<Position>();
+				Maze3d m = AllMazes.get(param[1]);
+				Maze3dAdapter MA=new Maze3dAdapter(m, 10);//cost 10
+				
+					try {
+//							if(MazeToSolution.containsKey(m)){	
+//									setChanged();
+//									notifyObservers("solution for "+param[1]+" is already exist");
+//									return null;
+//								}
+//							
+							 if(param.length==3||param.length==6){
+								if(m!=null)//get the array list for specific name
+									switch (param[2]) {
+										case "Astar-manhattan":
+											Searcher<Position> AstarsearcherManhattan=new Astar<Position>(new ManhattanDistance());
+											if (param.length == 3){
+												sol = AstarsearcherManhattan.search(MA);
+												MazeToSolution.put(m,sol);
+												return sol;
+											}
+											else if (param.length == 6){
+												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
+												sol = AstarsearcherManhattan.search(MA,newEnter);
+												MazeToSolution.put(m,sol);
+												return sol;
+											}
+										case "Astar-air":											
+											Searcher<Position> AstarsearcherAir=new Astar<Position>(new AirDistance());
+											if (param.length == 3){
+												sol = AstarsearcherAir.search(MA);
+												MazeToSolution.put(m,sol);
+												return sol;
+											}
+											else if (param.length == 6){
+												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
+												sol = AstarsearcherAir.search(MA,newEnter);
+												MazeToSolution.put(m,sol);
+												return sol;
+											}
+										case "Bfs":
+											Searcher<Position> searcher=new Bfs<>();
+											if (param.length == 3){
+												sol= searcher.search(MA);
+												MazeToSolution.put(m,sol);
+												return sol;
+											}
+											else if (param.length == 6){
+												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
+												sol= searcher.search(MA,newEnter);
+												MazeToSolution.put(m,sol);
+												return sol;
+											}
+										default:
+											throw new IOException("not a valid algorithm");
+									}
+								else throw new IOException("maze not found");
+							}	
+						else throw new IOException("Not a Valid command");
+		
+					} catch (Exception e) {
+						setChanged();
+						notifyObservers(e.getMessage());
+						return null;
+					}
+				}
 		});
-		/*try{
-			future.get();
+		try {
+			if(this.properties.get_interface().equals("CLI"))
+			{
+				setChanged();	
+				notifyObservers("Solution for "+param[1]+" is ready");
+			}
+			else if(this.properties.get_interface().equals("GUI"))
+			{
+			setChanged();	
+			notifyObservers(future.get());
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
 			e.printStackTrace();
-		}*/
+		}
 	}
 	
 
@@ -531,7 +524,6 @@ public class MyModel extends Observable implements Model{
 				if(MazeToSolution.get(AllMazes.get(param[2]))!=null)
 				{	
 					sol = MazeToSolution.get(AllMazes.get(param[2]));
-					//presenter.update(sol);------MVC------
 					setChanged();
 					notifyObservers(sol);
 				}
@@ -539,7 +531,6 @@ public class MyModel extends Observable implements Model{
 			}
 			else throw new IOException("Not a Valid command");
 		} catch (Exception e) {
-			//presenter.update(e.getMessage());------MVC------
 			setChanged();
 			notifyObservers(e.getMessage());
 		}
@@ -557,17 +548,15 @@ public class MyModel extends Observable implements Model{
 		notifyObservers("Shutting Down");
 		
     	if (!MazeToSolution.isEmpty()){
-    		
-    		
 			try {
-				ObjectOutputStream out;
-				out = new ObjectOutputStream(new FileOutputStream("mazes.maz"));
+				ObjectOutputStream out = new ObjectOutputStream(
+						   new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(
+						   new File("lib/mazes.zip")))));
 	    		out.writeObject(MazeToSolution);
 	    		out.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
     	}
 		
 		threadpool.shutdown();
