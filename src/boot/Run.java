@@ -1,13 +1,17 @@
 package boot;
 
-
 import model.MyModel;
 import presenter.MyPresenter;
 import presenter.Properties;
 import view.Gui;
-import view.MazeWindow;
 import view.MyView;
-
+/**
+ * 
+ * @author alon tal and omry dabush
+ * <h2> Run</h2>
+ * project main class - getting properties and than decide open Gui or Cli
+ *
+ */
 public class Run {
 
 	public static void main(String[] args) {
@@ -33,25 +37,5 @@ public class Run {
 			view.addObserver(presenter);
 			view.start();
 		}
-		/*MyView view = new MyView(System.in,System.out);
-		MyModel model = new MyModel();
-		MyPresenter presenter = new MyPresenter(model,view);
-		model.setPresenter(presenter);
-		view.setCommandLine(presenter.getHashCommand());
-		model.addObserver(presenter);
-		view.addObserver(presenter);
-		view.start();*/
-	
-		
-		
-		
-		/*Gui gui=new Gui("maze example", 700, 600);
-		MyModel model = new MyModel();
-		MyPresenter presenter = new MyPresenter(model,gui);
-		model.setPresenter(presenter);
-		gui.setCommandLine(presenter.getHashCommand());
-		model.addObserver(presenter);
-		gui.addObserver(presenter);
-		gui.start();*/
 	}
 }

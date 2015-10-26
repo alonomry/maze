@@ -21,8 +21,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import algorithms.demo.Maze3dAdapter;
 import algorithms.io.MyCompressorOutputStream;
 import algorithms.io.MyDecompressorInputStream;
 import algorithms.mazeGenerators.Maze3d;
@@ -30,11 +28,6 @@ import algorithms.mazeGenerators.Maze3dGenerator;
 import algorithms.mazeGenerators.MyMaze3dGenerator;
 import algorithms.mazeGenerators.Position;
 import algorithms.mazeGenerators.SimpleMaze3dGenerator;
-import algorithms.search.AirDistance;
-import algorithms.search.Astar;
-import algorithms.search.Bfs;
-import algorithms.search.ManhattanDistance;
-import algorithms.search.Searcher;
 import algorithms.search.Solution;
 import presenter.Presenter;
 import presenter.Properties;
@@ -482,105 +475,14 @@ public class MyModel extends Observable implements Model{
 			notifyObservers("Wrong Command");
 		}
 	}
-//		
-//		Future<Solution<Position>> future = threadpool.submit(new Callable<Solution<Position>>(){
-//		
-//			@Override
-//			public Solution<Position> call() throws Exception {
-//				
-//				Solution<Position> sol=new Solution<Position>();
-//				Maze3d m = AllMazes.get(param[1]);
-//				Maze3dAdapter MA=new Maze3dAdapter(m, 10);//cost 10
-//				
-//					try {
-//							if(MazeToSolution.containsKey(m)){	
-//									setChanged();
-//									notifyObservers("solution for "+param[1]+" is already exist");
-//									return null;
-//								}
-//							
-//							 if(param.length==3||param.length==6){
-//								if(m!=null)//get the array list for specific name
-//									switch (param[2]) {
-//										case "Astar-manhattan":
-//											Searcher<Position> AstarsearcherManhattan=new Astar<Position>(new ManhattanDistance());
-//											if (param.length == 3){
-//												sol = AstarsearcherManhattan.search(MA);
-//												MazeToSolution.put(m,sol);
-//												return sol;
-//											}
-//											else if (param.length == 6){
-//												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
-//												sol = AstarsearcherManhattan.search(MA,newEnter);
-//												MazeToSolution.put(m,sol);
-//												return sol;
-//											}
-//										case "Astar-air":											
-//											Searcher<Position> AstarsearcherAir=new Astar<Position>(new AirDistance());
-//											if (param.length == 3){
-//												sol = AstarsearcherAir.search(MA);
-//												MazeToSolution.put(m,sol);
-//												return sol;
-//											}
-//											else if (param.length == 6){
-//												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
-//												sol = AstarsearcherAir.search(MA,newEnter);
-//												MazeToSolution.put(m,sol);
-//												return sol;
-//											}
-//										case "Bfs":
-//											Searcher<Position> searcher=new Bfs<>();
-//											if (param.length == 3){
-//												sol= searcher.search(MA);
-//												MazeToSolution.put(m,sol);
-//												return sol;
-//											}
-//											else if (param.length == 6){
-//												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
-//												sol= searcher.search(MA,newEnter);
-//												MazeToSolution.put(m,sol);
-//												return sol;
-//											}
-//										default:
-//											throw new IOException("not a valid algorithm");
-//									}
-//								else throw new IOException("maze not found");
-//							}	
-//						else throw new IOException("Not a Valid command");
-//		
-//					} catch (Exception e) {
-//						setChanged();
-//						notifyObservers(e.getMessage());
-//						return null;
-//					}
-//				}
-//		});
-//		try {
-//			if(this.properties.get_interface().equals("CLI"))
-//			{
-//				setChanged();	
-//				notifyObservers("Solution for "+param[1]+" is ready");
-//			}
-//			else if(this.properties.get_interface().equals("GUI"))
-//			{
-//			setChanged();	
-//			notifyObservers(future.get());
-//			}
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		} catch (ExecutionException e) {
-//			e.printStackTrace();
-//		}
-//	}
-	
 
+	
 /**
  * <h2>dislplaySolutionCommand</h2>
  * This method retrieves the result of a specific maze and send it to the controller
  * @param Solution<Position> sol
  * 
  */
-	
 	@Override
 	public void dislplaySolutionCommand(String[] param) {
 		try {
@@ -651,7 +553,13 @@ public Properties getProperties() {
 	return properties;
 }
 
-
+/**
+ * 
+ *<h2>setProperties</h2>
+ *gets - properties file path <br>
+ *reading from Xml file and
+ *
+ */
 public void setProperties(String path) {
 	this.properties = new Properties(path);
 	setChanged();

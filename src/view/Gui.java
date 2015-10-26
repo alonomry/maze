@@ -31,17 +31,52 @@ import presenter.Properties;
 
 
 
+
+/**
+ * <H2>Gui</H2>
+ * implements "View" interface<br>
+ * all the buttons actions defined in this class<br>
+ * @param buttons HashMap that connecting between String and Listeners.<br> the Shell buttons taking the actions from this Hash
+ * @param CanvasKeyListener defining a key listener actions
+ * @param mazewindow kind of Basic window
+ * @param SolvingAlgorithm solving algorithm from properties file 
+ */
 public class Gui extends Observable implements View {
+	
+	/** The hash command for communicating with the presenter */
 	HashMap<String, Command> hashCommand;
+	
+	/** HashMap that connecting between String and Listeners.<br> the Shell buttons taking the actions from this Hash */
 	HashMap<String,Listener> buttons= new HashMap<>();
+	
+	/** defining a key listener actions */
 	KeyListener CanvasKeyListener;
+	
+	/** kind of Basic window */
 	MazeWindow mazewindow;
+	
+	/** solving algorithm from properties file and the file name from properties dialog */
 	String fileName=null, SolvingAlgorithm;
+	
+	/** The shell. */
 	Shell shell;
+	
+	/** The Last button pressed. */
 	String LastButtonPressed;
+	
+	/** The Current maze name. */
 	String CurrentMazeName;
+	
+	/** The key listener activator. */
 	boolean keyListenerActivator = false;
 	
+	/**
+	 * Instantiates a new gui.
+	 *
+	 * @param title the screen title
+	 * @param width the screen width
+	 * @param height the screen height
+	 */
 	public Gui(String title, int width, int height) {
 		this.mazewindow=new MazeWindow(title, width, height);
 		this.shell=mazewindow.getShell();
@@ -50,10 +85,12 @@ public class Gui extends Observable implements View {
 		this.mazewindow.setCanvasKeyListener(this.CanvasKeyListener);
 	}
 	
-	//MazeDisplayer maze;
 	
+	/**
+	 * Inits the buttons actions and put them on HashMap
+	 */
 	private void InitButtons() {	
-		
+		//generate button
 		buttons.put("generate",new Listener() {
 			
 			@Override
@@ -113,7 +150,8 @@ public class Gui extends Observable implements View {
 				sh.open();
 		}
 		});
-						
+		
+		//solve button
 		buttons.put("solve",new Listener() {
 			
 			@Override
@@ -143,7 +181,7 @@ public class Gui extends Observable implements View {
 			}	
 		});
 		
-		
+		//hint button
 		buttons.put("hint",new Listener() {
 			
 			@Override
@@ -170,7 +208,7 @@ public class Gui extends Observable implements View {
 		});
 		
 		
-		
+		//properties button
 		buttons.put("properties",new Listener() {
 			
 			@Override
@@ -189,7 +227,7 @@ public class Gui extends Observable implements View {
 			}
 		});
 		
-		
+		//about button
 		buttons.put("about",new Listener() {
 			
 			@Override
@@ -206,7 +244,7 @@ public class Gui extends Observable implements View {
 			}
 		});
 		
-		
+		//exit button
 		buttons.put("exit",new Listener() {
 			
 			@Override
@@ -218,6 +256,7 @@ public class Gui extends Observable implements View {
 			}
 		});
 		
+		//key listener
 		CanvasKeyListener=new KeyListener(){
 			
 			@Override
@@ -228,7 +267,7 @@ public class Gui extends Observable implements View {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (keyListenerActivator){
-					if (e.keyCode == SWT.ARROW_DOWN ) {
+					if (e.keyCode == SWT.ARROW_DOWN ) { //pressing Down button
 							if (mazewindow.maze.moveBackward())
 								playSound("lib/sound/beep.wav");
 							setChanged();
@@ -238,7 +277,7 @@ public class Gui extends Observable implements View {
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
 							}
-				    } else if (e.keyCode == SWT.ARROW_UP ) {
+				    } else if (e.keyCode == SWT.ARROW_UP ) { //pressing Up button
 					    	if (mazewindow.maze.moveForward())
 					    		playSound("lib/sound/beep.wav");
 							setChanged();
@@ -248,7 +287,7 @@ public class Gui extends Observable implements View {
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
 							}
-				    } else if (e.keyCode == SWT.ARROW_LEFT ) {
+				    } else if (e.keyCode == SWT.ARROW_LEFT ) { //pressing Left button
 					    	if (mazewindow.maze.moveLeft())
 					    		playSound("lib/sound/beep.wav");
 							setChanged();
@@ -258,7 +297,7 @@ public class Gui extends Observable implements View {
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
 							}
-				    } else if (e.keyCode == SWT.ARROW_RIGHT ) {
+				    } else if (e.keyCode == SWT.ARROW_RIGHT ) { //pressing Right button
 					    	if(mazewindow.maze.moveRight())
 					    		playSound("lib/sound/beep.wav");
 							setChanged();
@@ -268,7 +307,7 @@ public class Gui extends Observable implements View {
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
 							}
-					} else if (e.keyCode == SWT.SHIFT){
+					} else if (e.keyCode == SWT.SHIFT){ //pressing Shift button goes upper dimension
 							if (mazewindow.maze.moveUp())
 								playSound("lib/sound/beep.wav");
 							setChanged();
@@ -279,7 +318,7 @@ public class Gui extends Observable implements View {
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
 							}
-					} else if (e.keyCode == 0x2f){// The key "/" to go down
+					} else if (e.keyCode == 0x2f){// The key "/" to go lower dimension
 							if (mazewindow.maze.moveDown())
 								playSound("lib/sound/beep.wav");
 							setChanged();
@@ -295,6 +334,12 @@ public class Gui extends Observable implements View {
 			};	
 		}
 
+	/**
+	 * <H2>display</H2>
+	 * checks what object returned from Mymodel and than display something or making other algorithm
+	 * @param obj object that returned
+	 * @param d used in CLI interface, in GUI interface Irrelevant
+	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public void display(Object obj, DisplayType d) {
@@ -302,15 +347,16 @@ public class Gui extends Observable implements View {
 		String type;
 			type = obj.getClass().getCanonicalName();
 			switch (type) {
-				case "algorithms.mazeGenerators.Maze3d":
+				case "algorithms.mazeGenerators.Maze3d": //returned Maze3d Object
 					mazewindow.maze.setCurrentMaze((Maze3d)obj);
 					keyListenerActivator =true;
 					setButtonOn();
 					checkDimention();
+					//moving the character to the enter position
 					this.mazewindow.maze.setCharacterPosition(((Maze3d)obj).getEnter().getDim(),((Maze3d)obj).getEnter().getWid(),((Maze3d)obj).getEnter().getLen());
 					break;
-				case "java.lang.String":
-					if (((String)obj).contains("solution"))
+				case "java.lang.String": //returned String Object
+					if (((String)obj).contains("solution")) //if the String contains "solution", create new line and send to the presenter
 					{
 						String[] line={"display","solution",CurrentMazeName };
 						Command command = hashCommand.get("display solution");
@@ -320,6 +366,7 @@ public class Gui extends Observable implements View {
 						break;
 					}
 					
+					//if the String equals to "maze ___ is ready", create new line and send to the presenter
 					if (((String)obj).equals("maze "+CurrentMazeName+" is ready")) {
 						String[] line1={"display",CurrentMazeName};
 						Command command1 = hashCommand.get("display");
@@ -329,6 +376,7 @@ public class Gui extends Observable implements View {
 						break;
 					}
 					
+					//if the string contains some error message
 					if (((String)obj).contains("Valid")||((String)obj).contains("found")||((String)obj).contains("exist")){
 						Display.getDefault().asyncExec(new Runnable() {
 							public void run() {
@@ -354,13 +402,13 @@ public class Gui extends Observable implements View {
 					}
 					
 				break;	
-			case "algorithms.search.Solution":
-					if(LastButtonPressed.equals("solve")){
-						mazewindow.WalkToExit((Solution<Position>)obj);
+			case "algorithms.search.Solution": //returned Solution Object
+					if(LastButtonPressed.equals("solve")){//if the solution is to solve the whole maze
+						mazewindow.maze.WalkToExit((Solution<Position>)obj);
 						break;
 					}
-					else if(LastButtonPressed.equals("hint")){
-						mazewindow.WalkByHint((Solution<Position>)obj);
+					else if(LastButtonPressed.equals("hint")){ //if the solution returned for hint
+						mazewindow.maze.WalkByHint((Solution<Position>)obj);
 						if (CharAndExitIsEqual()){
 							setButtonOff();
 							doneMessageBox("you reach the exit point");
@@ -369,7 +417,7 @@ public class Gui extends Observable implements View {
 					}
 								
 				break;
-			case "presenter.Properties":
+			case "presenter.Properties": //returned Properties Object
 				this.setSolvingAlgorithm(((Properties)obj).getSolvingAlgorithm());	
 				Display.getDefault().asyncExec(new Runnable() {
 					public void run() {
@@ -386,6 +434,12 @@ public class Gui extends Observable implements View {
 			}
 	}
 	
+	/**
+	 * <H2>doneMessageBox</h2>
+	 * Opening message box when the mazed solved
+	 *
+	 * @param s the s
+	 */
 	public void doneMessageBox(String s){
 		Display.getDefault().asyncExec(new Runnable() {
 			public void run() {
@@ -397,16 +451,31 @@ public class Gui extends Observable implements View {
 		});
 	}
 	
+	/**
+	 * Sets the command line hash map
+	 *
+	 * @param newhashCommand the HashMap
+	 */
 	public void setCommandLine(HashMap<String, Command> newhashCommand) {
 		this.hashCommand = new HashMap<>(newhashCommand);
 		
 	}
 	
+	/**
+	 * Sets the solving algorithm.
+	 *
+	 * @param solvingAlgorithm the new solving algorithm
+	 */
 	public void setSolvingAlgorithm(String solvingAlgorithm) {
 		SolvingAlgorithm = solvingAlgorithm;
 	}
 
 	
+	/**
+	 * checks if the character position and the enter position is the same
+	 *
+	 * @return true, if successful
+	 */
 	public boolean CharAndEnterIsEqual(){
 		if(mazewindow.maze.getCharacter().equals(mazewindow.maze.getCurrentMaze().getEnter())){
 			return true;
@@ -414,6 +483,11 @@ public class Gui extends Observable implements View {
 		return false;	
 	}
 	
+	/**
+	 * checks if the character position and the exit position is the same
+	 *
+	 * @return true, if successful
+	 */
 	public boolean CharAndExitIsEqual(){
 		if(mazewindow.maze.getCharacter().equals(mazewindow.maze.getCurrentMaze().getExit())){
 			return true;
@@ -421,18 +495,32 @@ public class Gui extends Observable implements View {
 		return false;	
 	}
 
+	/**
+	 * Check if can move upper dimension or lowe dimension
+	 */
 	public void checkDimention(){
 		mazewindow.arrowDimention();
 	}
 	
+	/**
+	 * Sets the button off.
+	 */
 	public void setButtonOff(){
 		mazewindow.setButtonOff();
 	}
 	
+	/**
+	 * Sets the button on.
+	 */
 	public void setButtonOn(){
 		mazewindow.setButtonOn();
 	}
 	
+	/**
+	 * Play sound.
+	 *
+	 * @param musicfile the musicfile path
+	 */
 	public void playSound(String musicfile) {
 		File audioFile = new File(musicfile);
 		try{
@@ -446,6 +534,9 @@ public class Gui extends Observable implements View {
 		}
 	}
 	
+	/**
+	 * calls to Run of mazewindow class
+	 */
 	@Override
 	public void start() {
 		mazewindow.run();
