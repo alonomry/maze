@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Observable;
 import java.util.concurrent.Callable;
@@ -416,97 +418,160 @@ public class MyModel extends Observable implements Model{
 	
 	@Override
 	public void SolveCommand(String[] param){
-		
-		
-		Future<Solution<Position>> future = threadpool.submit(new Callable<Solution<Position>>(){
-		
-			@Override
-			public Solution<Position> call() throws Exception {
-				
-				Solution<Position> sol=new Solution<Position>();
-				Maze3d m = AllMazes.get(param[1]);
-				Maze3dAdapter MA=new Maze3dAdapter(m, 10);//cost 10
-				
-					try {
+		try{
+			if (param.length==3||param.length==6)
+				if (AllMazes.get(param[1])!=null){
+					try{
+						//Creates a new Socket to server with the ip and port from the XML file
+						Socket myServer = new Socket(properties.getServer_ip(),Integer.parseInt(properties.getSerever_port()));
+						ObjectOutputStream outToServer = new ObjectOutputStream(myServer.getOutputStream());
+						
+						ArrayList<Object> dataToServer =new  ArrayList<>(); 
+						dataToServer.add("solve");
+						dataToServer.add(properties.getSolvingAlgorithm());
+						if (param.length == 3){
+							dataToServer.add(AllMazes.get(param[1]));
+						}
+						else{
+							int y = Integer.parseInt(param[3]);
+							int z = Integer.parseInt(param[4]);
+							int x = Integer.parseInt(param[5]);
+							Position newEnter = new Position(y,z,x);
+							dataToServer.add(AllMazes.get(param[1]));
+							dataToServer.add(newEnter);
+							
+						}
+						
+						outToServer.writeObject(dataToServer);
+						outToServer.flush();
+						
+						
+						ObjectInputStream inFromServer = new ObjectInputStream(myServer.getInputStream());
+						@SuppressWarnings("unchecked")
+						Solution<Position> dataFromServer = (Solution<Position>)inFromServer.readObject();
+						
+						if (dataFromServer == null){
+							setChanged();
+							notifyObservers("Wrong Solution");
+						}
+						else if (this.properties.get_interface().equals("CLI")){
+								setChanged();	
+								notifyObservers("Solution for "+param[1]+" is ready");
+						}
+							else{
+								setChanged();	
+								notifyObservers(dataFromServer);
+							}
+						if (dataFromServer != null){
+							outToServer.close();
+							inFromServer.close();
+							myServer.close();
+						}
+								
+							
+					}catch (Exception e){
+						setChanged();
+						notifyObservers("Can't Connect To Server...");
+						
+					}
+				}
+				else throw new IOException("maze ot found");
+			else throw new IOException("Not A Valid Command");
+		} catch (Exception e) {
+			setChanged();
+			notifyObservers("Wrong Command");
+		}
+	}
+//		
+//		Future<Solution<Position>> future = threadpool.submit(new Callable<Solution<Position>>(){
+//		
+//			@Override
+//			public Solution<Position> call() throws Exception {
+//				
+//				Solution<Position> sol=new Solution<Position>();
+//				Maze3d m = AllMazes.get(param[1]);
+//				Maze3dAdapter MA=new Maze3dAdapter(m, 10);//cost 10
+//				
+//					try {
 //							if(MazeToSolution.containsKey(m)){	
 //									setChanged();
 //									notifyObservers("solution for "+param[1]+" is already exist");
 //									return null;
 //								}
 //							
-							 if(param.length==3||param.length==6){
-								if(m!=null)//get the array list for specific name
-									switch (param[2]) {
-										case "Astar-manhattan":
-											Searcher<Position> AstarsearcherManhattan=new Astar<Position>(new ManhattanDistance());
-											if (param.length == 3){
-												sol = AstarsearcherManhattan.search(MA);
-												MazeToSolution.put(m,sol);
-												return sol;
-											}
-											else if (param.length == 6){
-												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
-												sol = AstarsearcherManhattan.search(MA,newEnter);
-												MazeToSolution.put(m,sol);
-												return sol;
-											}
-										case "Astar-air":											
-											Searcher<Position> AstarsearcherAir=new Astar<Position>(new AirDistance());
-											if (param.length == 3){
-												sol = AstarsearcherAir.search(MA);
-												MazeToSolution.put(m,sol);
-												return sol;
-											}
-											else if (param.length == 6){
-												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
-												sol = AstarsearcherAir.search(MA,newEnter);
-												MazeToSolution.put(m,sol);
-												return sol;
-											}
-										case "Bfs":
-											Searcher<Position> searcher=new Bfs<>();
-											if (param.length == 3){
-												sol= searcher.search(MA);
-												MazeToSolution.put(m,sol);
-												return sol;
-											}
-											else if (param.length == 6){
-												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
-												sol= searcher.search(MA,newEnter);
-												MazeToSolution.put(m,sol);
-												return sol;
-											}
-										default:
-											throw new IOException("not a valid algorithm");
-									}
-								else throw new IOException("maze not found");
-							}	
-						else throw new IOException("Not a Valid command");
-		
-					} catch (Exception e) {
-						setChanged();
-						notifyObservers(e.getMessage());
-						return null;
-					}
-				}
-		});
-		try {
-			if(this.properties.get_interface().equals("CLI"))
-			{
-				setChanged();	
-				notifyObservers("Solution for "+param[1]+" is ready");
-			}
-			else if(this.properties.get_interface().equals("GUI"))
-			{
-			setChanged();	
-			notifyObservers(future.get());
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
-	}
+//							 if(param.length==3||param.length==6){
+//								if(m!=null)//get the array list for specific name
+//									switch (param[2]) {
+//										case "Astar-manhattan":
+//											Searcher<Position> AstarsearcherManhattan=new Astar<Position>(new ManhattanDistance());
+//											if (param.length == 3){
+//												sol = AstarsearcherManhattan.search(MA);
+//												MazeToSolution.put(m,sol);
+//												return sol;
+//											}
+//											else if (param.length == 6){
+//												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
+//												sol = AstarsearcherManhattan.search(MA,newEnter);
+//												MazeToSolution.put(m,sol);
+//												return sol;
+//											}
+//										case "Astar-air":											
+//											Searcher<Position> AstarsearcherAir=new Astar<Position>(new AirDistance());
+//											if (param.length == 3){
+//												sol = AstarsearcherAir.search(MA);
+//												MazeToSolution.put(m,sol);
+//												return sol;
+//											}
+//											else if (param.length == 6){
+//												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
+//												sol = AstarsearcherAir.search(MA,newEnter);
+//												MazeToSolution.put(m,sol);
+//												return sol;
+//											}
+//										case "Bfs":
+//											Searcher<Position> searcher=new Bfs<>();
+//											if (param.length == 3){
+//												sol= searcher.search(MA);
+//												MazeToSolution.put(m,sol);
+//												return sol;
+//											}
+//											else if (param.length == 6){
+//												Position newEnter=new Position(Integer.parseInt(param[3]), Integer.parseInt(param[4]), Integer.parseInt(param[5]));
+//												sol= searcher.search(MA,newEnter);
+//												MazeToSolution.put(m,sol);
+//												return sol;
+//											}
+//										default:
+//											throw new IOException("not a valid algorithm");
+//									}
+//								else throw new IOException("maze not found");
+//							}	
+//						else throw new IOException("Not a Valid command");
+//		
+//					} catch (Exception e) {
+//						setChanged();
+//						notifyObservers(e.getMessage());
+//						return null;
+//					}
+//				}
+//		});
+//		try {
+//			if(this.properties.get_interface().equals("CLI"))
+//			{
+//				setChanged();	
+//				notifyObservers("Solution for "+param[1]+" is ready");
+//			}
+//			else if(this.properties.get_interface().equals("GUI"))
+//			{
+//			setChanged();	
+//			notifyObservers(future.get());
+//			}
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		} catch (ExecutionException e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 
 /**

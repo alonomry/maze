@@ -1,8 +1,10 @@
 package view;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Observable;
-
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -211,8 +213,8 @@ public class Gui extends Observable implements View {
 			public void handleEvent(Event arg0) {
 				setChanged();
 				notifyObservers(hashCommand.get("exit"));
-				shell.close();
-				
+				shell.dispose();
+				System.exit(0);
 			}
 		});
 		
@@ -227,52 +229,65 @@ public class Gui extends Observable implements View {
 			public void keyPressed(KeyEvent e) {
 				if (keyListenerActivator){
 					if (e.keyCode == SWT.ARROW_DOWN ) {
-							mazewindow.maze.moveBackward();
+							if (mazewindow.maze.moveBackward())
+								playSound("lib/sound/beep.wav");
 							setChanged();
 							notifyObservers("checkDimention");
 							if (CharAndExitIsEqual()){
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
+								playSound("lib/sound/iwon.wav");
 							}
 				    } else if (e.keyCode == SWT.ARROW_UP ) {
-					    	mazewindow.maze.moveForward();
+					    	if (mazewindow.maze.moveForward())
+					    		playSound("lib/sound/beep.wav");
 							setChanged();
 							notifyObservers("checkDimention");
 							if (CharAndExitIsEqual()){
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
+								playSound("lib/sound/iwon.wav");
 							}
 				    } else if (e.keyCode == SWT.ARROW_LEFT ) {
-					    	mazewindow.maze.moveLeft();
+					    	if (mazewindow.maze.moveLeft())
+					    		playSound("lib/sound/beep.wav");
 							setChanged();
 							notifyObservers("checkDimention");
 							if (CharAndExitIsEqual()){
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
+								playSound("lib/sound/iwon.wav");
 							}
 				    } else if (e.keyCode == SWT.ARROW_RIGHT ) {
-					    	mazewindow.maze.moveRight();
+					    	if(mazewindow.maze.moveRight())
+					    		playSound("lib/sound/beep.wav");
 							setChanged();
 							notifyObservers("checkDimention");
 							if (CharAndExitIsEqual()){
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
+								playSound("lib/sound/iwon.wav");
 							}
 					} else if (e.keyCode == SWT.SHIFT){
-							mazewindow.maze.moveUp();
+							if (mazewindow.maze.moveUp())
+								playSound("lib/sound/beep.wav");
 							setChanged();
 							notifyObservers("checkDimention");
+							
 							if (CharAndExitIsEqual()){
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
+								playSound("lib/sound/iwon.wav");
 							}
 					} else if (e.keyCode == 0x2f){// The key "/" to go down
-							mazewindow.maze.moveDown();
+							if (mazewindow.maze.moveDown())
+								playSound("lib/sound/beep.wav");
 							setChanged();
 							notifyObservers("checkDimention");
 							if (CharAndExitIsEqual()){
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
+								playSound("lib/sound/iwon.wav");
 							}
 					}
 				}
@@ -416,6 +431,19 @@ public class Gui extends Observable implements View {
 	
 	public void setButtonOn(){
 		mazewindow.setButtonOn();
+	}
+	
+	public void playSound(String musicfile) {
+		File audioFile = new File(musicfile);
+		try{
+			Clip clip = AudioSystem.getClip();
+			clip.open(AudioSystem.getAudioInputStream(audioFile));
+			clip.start();
+		}catch (Exception e) {
+			setChanged();
+			notifyObservers("Wrong File");
+			
+		}
 	}
 	
 	@Override

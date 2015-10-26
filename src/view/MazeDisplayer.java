@@ -49,16 +49,16 @@ public abstract class MazeDisplayer extends Canvas{
 	
 	public abstract Position getCharacter();
 	
-	public abstract void moveUp();
+	public abstract boolean moveUp();
 
-	public abstract void moveDown();
+	public abstract boolean moveDown();
 	
-	public abstract void moveForward();
+	public abstract boolean moveForward();
 	
-	public abstract void moveBackward();
+	public abstract boolean moveBackward();
 
-	public abstract void moveLeft();
+	public abstract boolean moveLeft();
 
-	public  abstract void moveRight();
+	public  abstract boolean moveRight();
 
 }

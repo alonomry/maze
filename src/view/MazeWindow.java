@@ -36,7 +36,6 @@ public class MazeWindow extends BasicWindow {//implements View {
 	Button HintButton;
 	Button SolveButton;
 	boolean keyListenerActivator = false;
-	
 
 	public MazeWindow(String title, int width, int height) {
 		super(title, width, height);
@@ -56,10 +55,15 @@ public class MazeWindow extends BasicWindow {//implements View {
 					
 					i--;
 				}
+				else{
+					timer.cancel();
+					timer.purge();
+				}
 			}
 		};
 		timer.scheduleAtFixedRate(task, 0, (long) (0.3 * 1000));
 		timer.purge();
+		
 	}
 	
 	public void WalkByHint(Solution<Position> sol){
@@ -174,6 +178,8 @@ public class MazeWindow extends BasicWindow {//implements View {
 	//*********and of key listener***********   
 	
 	    shell.setMenuBar(menuBar);
+	    
+	    shell.addListener(SWT.Close, buttons.get("exit"));
 				
 	}
 	
@@ -246,6 +252,5 @@ public class MazeWindow extends BasicWindow {//implements View {
 		}
 			
 	}
-
 
 }

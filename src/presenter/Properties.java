@@ -13,7 +13,8 @@ public class Properties {
 	String MaxTreads;
 	String SolvingAlgorithm;
 	String GenerateAlgorithm;
-
+	String server_ip;
+	String serever_port;
 	public Properties(String path) {
 
     try {
@@ -36,6 +37,8 @@ public class Properties {
 			setMaxTreads(eElement.getElementsByTagName("max_threads").item(0).getTextContent());
 			setSolvingAlgorithm(eElement.getElementsByTagName("solving_algorithm").item(0).getTextContent());
 			setGenerateAlgorithm(eElement.getElementsByTagName("generate_algorithm").item(0).getTextContent());
+			setServer_ip(eElement.getElementsByTagName("server_ip").item(0).getTextContent());
+			setSerever_port(eElement.getElementsByTagName("server_port").item(0).getTextContent());
 				}
     } catch (Exception e) {
 	e.printStackTrace();
@@ -78,6 +81,30 @@ public class Properties {
 
 	public void setGenerateAlgorithm(String generateAlgorithm) {
 		GenerateAlgorithm = generateAlgorithm;
+	}
+
+
+
+	public String getServer_ip() {
+		return server_ip;
+	}
+
+
+
+	public void setServer_ip(String server_ip) {
+		this.server_ip = server_ip;
+	}
+
+
+
+	public String getSerever_port() {
+		return serever_port;
+	}
+
+
+
+	public void setSerever_port(String string) {
+		this.serever_port = string;
 	}
 
 }
