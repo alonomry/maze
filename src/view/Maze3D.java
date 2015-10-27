@@ -112,7 +112,6 @@ public class Maze3D extends MazeDisplayer {
 						redraw();
 						
 					}
-					
 				});
 				return true;
 			}	
@@ -197,6 +196,7 @@ public class Maze3D extends MazeDisplayer {
 		else return false;
 	}
 
+
 	@Override
 	public void setCharacterPosition(int dim, int wid,int len) {//
 		mazeData = currentMaze.getCrossSectionByY(dim);
@@ -214,7 +214,7 @@ public class Maze3D extends MazeDisplayer {
 		currentMaze = m;
 		mazeData = currentMaze.getCrossSectionByY(currentMaze.getEnter().getDim());
 		setCharacterPosition(currentMaze.getEnter().getDim(), currentMaze.getEnter().getWid(), currentMaze.getEnter().getLen());
-		redraw();
+
 	}
 	
 	@Override

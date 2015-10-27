@@ -1,7 +1,6 @@
 package model;
 
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -19,8 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+
 import algorithms.io.MyCompressorOutputStream;
 import algorithms.io.MyDecompressorInputStream;
 import algorithms.mazeGenerators.Maze3d;
@@ -48,7 +46,7 @@ public class MyModel extends Observable implements Model{
 
 	Presenter presenter;
 	HashMap<String, Maze3d> AllMazes= new HashMap<>();
-	HashMap<Maze3d, Solution<Position>> MazeToSolution;
+//	HashMap<Maze3d, Solution<Position>> MazeToSolution;
 	ExecutorService threadpool;
 	Position OriginalEnter;
 	Properties properties;
@@ -63,31 +61,6 @@ public class MyModel extends Observable implements Model{
 	public MyModel() {
 		loadProperties();
 		threadpool=Executors.newFixedThreadPool(Integer.parseInt(this.properties.getMaxTreads()));
-		loadMazeToSolution();
-		}
-		
-	
-	@SuppressWarnings("unchecked")
-	public void loadMazeToSolution (){
-		File file = new File("lib/mazes.zip");
-		if (file.exists()){
-			try {
-				ObjectInputStream in = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
-				try {
-					MazeToSolution = (HashMap<Maze3d, Solution<Position>>)in.readObject();
-				} catch (ClassNotFoundException e) {
-					setChanged();
-					notifyObservers(e.getMessage());
-				}
-				in.close();
-			} catch (IOException e) {
-				setChanged();
-				notifyObservers(e.getMessage());
-			
-			}
-		}
-		else 
-			MazeToSolution =  new HashMap<Maze3d,Solution<Position>>();
 	}
 	
 	public void loadProperties(){
@@ -468,38 +441,68 @@ public class MyModel extends Observable implements Model{
 						
 					}
 				}
-				else throw new IOException("maze ot found");
+				else{
+					throw new IOException("Maze Not Found");
+					
+				}
 			else throw new IOException("Not A Valid Command");
-		} catch (Exception e) {
+		} catch (IOException e1) {
 			setChanged();
-			notifyObservers("Wrong Command");
+			notifyObservers(e1.getMessage());
 		}
 	}
-
 	
+
 /**
  * <h2>dislplaySolutionCommand</h2>
  * This method retrieves the result of a specific maze and send it to the controller
  * @param Solution<Position> sol
  * 
  */
+	
 	@Override
 	public void dislplaySolutionCommand(String[] param) {
-		try {
-			if(param.length==3){
-				Solution<Position> sol = new Solution<>();
-				if(MazeToSolution.get(AllMazes.get(param[2]))!=null)
-				{	
-					sol = MazeToSolution.get(AllMazes.get(param[2]));
-					setChanged();
-					notifyObservers(sol);
+		
+		try{
+			if (param.length==3){
+				if (AllMazes.get(param[2])!=null){
+					try{
+						Socket myServer = new Socket(properties.getServer_ip(),Integer.parseInt(properties.getSerever_port()));	
+						ObjectOutputStream outToServer = new ObjectOutputStream(myServer.getOutputStream());
+						
+						ArrayList<Object> dataToServer =new  ArrayList<>(); 
+						dataToServer.add("get solution");
+						dataToServer.add(AllMazes.get(param[2]));
+						
+						outToServer.writeObject(dataToServer);
+						outToServer.flush();
+						
+						ObjectInputStream inFromServer = new ObjectInputStream(myServer.getInputStream());
+						@SuppressWarnings("unchecked")
+						Solution<Position> dataFromServer = (Solution<Position>)inFromServer.readObject();
+						
+						if (dataFromServer == null){
+							setChanged();
+							notifyObservers("dont have solution for "+param[2]);
+						}
+						else{
+							setChanged();	
+							notifyObservers(dataFromServer);
+							outToServer.close();
+							inFromServer.close();
+							myServer.close();
+						}
+					}catch  (Exception e){
+						setChanged();
+						notifyObservers("Can't Connect To Server...");
+					}
 				}
-				else throw new IOException("dont have solution for "+param[2]);
+				else throw new IOException("The Maze "+param[2]+ " Does Not Exist");
 			}
-			else throw new IOException("Not a Valid command");
-		} catch (Exception e) {
-			setChanged();
-			notifyObservers(e.getMessage());
+			else throw new IOException("Wrong Command");
+		}catch (IOException e){
+				setChanged();
+				notifyObservers(e.getMessage());	
 		}
 	}
 /**
@@ -513,18 +516,7 @@ public class MyModel extends Observable implements Model{
 	public void exitCommand() {
 		setChanged();
 		notifyObservers("Shutting Down");
-		
-    	if (!MazeToSolution.isEmpty()){
-			try {
-				ObjectOutputStream out = new ObjectOutputStream(
-						   new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(
-						   new File("lib/mazes.zip")))));
-	    		out.writeObject(MazeToSolution);
-	    		out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-    	}
+
 		
 		threadpool.shutdown();
 		//wait 10 seconds over and over again until all running jobs have finished

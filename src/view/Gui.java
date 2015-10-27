@@ -69,6 +69,8 @@ public class Gui extends Observable implements View {
 	
 	/** The key listener activator. */
 	boolean keyListenerActivator = false;
+	/** if the server is connected or not. */
+	boolean serverConnected = true;
 	
 	/**
 	 * Instantiates a new gui.
@@ -158,18 +160,19 @@ public class Gui extends Observable implements View {
 			public void handleEvent(Event arg0) {
 				LastButtonPressed="solve";
 				keyListenerActivator = false;
+				serverConnected = true;
 						if(CharAndEnterIsEqual()){
-							setChanged();
-							notifyObservers("setButtonOff");
 							String[] line={"solve",CurrentMazeName,SolvingAlgorithm};
 							Command command = hashCommand.get("solve");
 							command.setStringCommand(line);
 							setChanged();
 							notifyObservers(command);
+							if (serverConnected){
+								setChanged();
+								notifyObservers("setButtonOff");
+							}
 						}
 						else{
-							setChanged();
-							notifyObservers("setButtonOff");
 							String[] line={"solve",CurrentMazeName,SolvingAlgorithm,Integer.toString(mazewindow.maze.getCharacter().getDim()),	
 																					Integer.toString(mazewindow.maze.getCharacter().getWid()),
 																					Integer.toString(mazewindow.maze.getCharacter().getLen())};
@@ -177,6 +180,10 @@ public class Gui extends Observable implements View {
 							command.setStringCommand(line);
 							setChanged();
 							notifyObservers(command);
+							if (serverConnected){
+								setChanged();
+								notifyObservers("setButtonOff");
+							}
 						}
 			}	
 		});
@@ -276,6 +283,7 @@ public class Gui extends Observable implements View {
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
+								keyListenerActivator = false;
 							}
 				    } else if (e.keyCode == SWT.ARROW_UP ) { //pressing Up button
 					    	if (mazewindow.maze.moveForward())
@@ -286,6 +294,7 @@ public class Gui extends Observable implements View {
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
+								keyListenerActivator = false;
 							}
 				    } else if (e.keyCode == SWT.ARROW_LEFT ) { //pressing Left button
 					    	if (mazewindow.maze.moveLeft())
@@ -296,6 +305,7 @@ public class Gui extends Observable implements View {
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
+								keyListenerActivator = false;
 							}
 				    } else if (e.keyCode == SWT.ARROW_RIGHT ) { //pressing Right button
 					    	if(mazewindow.maze.moveRight())
@@ -306,6 +316,7 @@ public class Gui extends Observable implements View {
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
+								keyListenerActivator = false;
 							}
 					} else if (e.keyCode == SWT.SHIFT){ //pressing Shift button goes upper dimension
 							if (mazewindow.maze.moveUp())
@@ -317,6 +328,7 @@ public class Gui extends Observable implements View {
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
+								keyListenerActivator = false;
 							}
 					} else if (e.keyCode == 0x2f){// The key "/" to go lower dimension
 							if (mazewindow.maze.moveDown())
@@ -327,6 +339,7 @@ public class Gui extends Observable implements View {
 								setButtonOff();
 								doneMessageBox("Congratulation You Solved The Maze :)");
 								playSound("lib/sound/iwon.wav");
+								keyListenerActivator = false;
 							}
 					}
 				}
@@ -353,7 +366,7 @@ public class Gui extends Observable implements View {
 					setButtonOn();
 					checkDimention();
 					//moving the character to the enter position
-					this.mazewindow.maze.setCharacterPosition(((Maze3d)obj).getEnter().getDim(),((Maze3d)obj).getEnter().getWid(),((Maze3d)obj).getEnter().getLen());
+					//this.mazewindow.maze.setCharacterPosition(((Maze3d)obj).getEnter().getDim(),((Maze3d)obj).getEnter().getWid(),((Maze3d)obj).getEnter().getLen());
 					break;
 				case "java.lang.String": //returned String Object
 					if (((String)obj).contains("solution")) //if the String contains "solution", create new line and send to the presenter
@@ -373,6 +386,17 @@ public class Gui extends Observable implements View {
 						command1.setStringCommand(line1);
 						setChanged();
 						notifyObservers(command1);	
+						break;
+					}
+					
+					if (((String)obj).contains("dont have solution for ")) {
+						doneMessageBox((String)obj);
+						break;
+					}
+					
+					if (((String)obj).equals("Can't Connect To Server...")) {
+						doneMessageBox((String)obj);
+						serverConnected = false;
 						break;
 					}
 					
