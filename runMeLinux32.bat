@@ -1,0 +1,1 @@
+java -cp ./lib/Maze3dProject.jar:.\swt\linux32\swtlinux32.jar:mvpMaze.jar boot.Run

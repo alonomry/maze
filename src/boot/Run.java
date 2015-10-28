@@ -19,7 +19,7 @@ public class Run {
 		MyModel model = new MyModel();
 		Properties properties=model.getProperties();
 		if(properties.get_interface().contains("GUI")){
-			Gui gui=new Gui("maze example", 700, 600);
+			Gui gui=new Gui("Alon Tal and Omry Dabush M-A-Z-E", 700, 600);
 			MyPresenter presenter = new MyPresenter(model,gui);
 			model.setPresenter(presenter);
 			gui.setCommandLine(presenter.getHashCommand());

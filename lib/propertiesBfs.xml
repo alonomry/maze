@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<properties>
-	<staff>
-		<user_interface>GUI</user_interface>
-		<max_threads>15</max_threads>
-		<solving_algorithm>Bfs</solving_algorithm>
-		<generate_algorithm>simplemaze</generate_algorithm>
-	</staff>
-</properties>

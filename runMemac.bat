@@ -1,0 +1,1 @@
+java -cp ./lib/Maze3dProject.jar:.\swt\mac\swtmac.jar:mvpMaze.jar boot.Run
